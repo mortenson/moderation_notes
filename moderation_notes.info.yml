@@ -1,0 +1,7 @@
+name: Moderation Notes
+type: module
+description: Provides the ability to notate elements of a moderated Entity.
+core: 8.x
+package: Other
+dependencies:
+  - content_moderation
