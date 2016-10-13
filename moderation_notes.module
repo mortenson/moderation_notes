@@ -2,19 +2,26 @@
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 
 /**
- * Implements hook_entity_view_alter().
+ * Implements hook_preprocess_HOOK() for field templates.
  */
-function moderation_notes_entity_view_alter(&$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
-  $build['#cache']['contexts'][] = 'user.permissions';
+function moderation_notes_preprocess_field(&$variables) {
+  $variables['#cache']['contexts'][] = 'user.permissions';
+
+  $element = $variables['element'];
+  /** @var $entity \Drupal\Core\Entity\EntityInterface */
+  $entity = $element['#object'];
 
   if (!_moderation_notes_access($entity)) {
     return;
   }
 
-  $build['#attributes']['data-moderation-notes-entity-id'] = $entity->getEntityTypeId() . '/' . $entity->id();
+  $definition = $entity->getFieldDefinition($element['#field_name']);
+  if (!$definition->isComputed()) {
+    $variables['#attached']['library'][] = 'moderation_notes/main';
+    $variables['attributes']['data-moderation-notes-field-id'] = $entity->getEntityTypeId() . '/' . $entity->id() . '/' . $element['#field_name'] . '/' . $element['#language'] . '/' . $element['#view_mode'];
+  }
 }
 
 /**
