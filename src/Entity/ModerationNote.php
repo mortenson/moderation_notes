@@ -2,12 +2,14 @@
 
 namespace Drupal\moderation_notes\Entity;
 
+use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\moderation_notes\ModerationNoteInterface;
+use Drupal\user\UserInterface;
 
 /**
  * Defines the moderation_note entity.
@@ -16,7 +18,10 @@ use Drupal\moderation_notes\ModerationNoteInterface;
  *   id = "moderation_note",
  *   label = @Translation("Moderation note"),
  *   handlers = {
- *     "access" = "Drupal\moderation_notes\AccessControlHandler"
+ *     "access" = "Drupal\moderation_notes\AccessControlHandler",
+ *     "form" = {
+ *       "default" = "Drupal\moderation_notes\ModerationNoteForm",
+ *     }
  *   },
  *   base_table = "moderation_note",
  *   admin_permission = "administer moderation notes",
@@ -30,13 +35,15 @@ use Drupal\moderation_notes\ModerationNoteInterface;
  */
 class ModerationNote extends ContentEntityBase implements ModerationNoteInterface {
 
+  use EntityChangedTrait;
+
   /**
    * {@inheritdoc}
    */
   public static function preCreate(EntityStorageInterface $storage_controller, array &$values) {
     parent::preCreate($storage_controller, $values);
     $values += array(
-      'author' => \Drupal::currentUser()->id(),
+      'uid' => \Drupal::currentUser()->id(),
     );
   }
 
@@ -44,26 +51,17 @@ class ModerationNote extends ContentEntityBase implements ModerationNoteInterfac
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
-    $fields['id'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('ID'))
-      ->setDescription(t('The ID of the entity.'))
-      ->setReadOnly(TRUE);
-
-    $fields['uuid'] = BaseFieldDefinition::create('uuid')
-      ->setLabel(t('UUID'))
-      ->setDescription(t('The UUID of the entity.'))
-      ->setReadOnly(TRUE);
+    $fields = parent::baseFieldDefinitions($entity_type);
 
     $fields['parent'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Parent'))
       ->setDescription(t('The parent Moderation Note if this is a reply.'))
       ->setSetting('target_type', 'moderation_note');
 
-    $fields['author'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('User'))
-      ->setDescription(t('The user who created this entity.'))
+    $fields['uid'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Authored by'))
+      ->setDescription(t('The username of the content author.'))
       ->setSetting('target_type', 'user')
-      ->setSetting('handler', 'default')
       ->setRequired(TRUE);
 
     $fields['entity_type'] = BaseFieldDefinition::create('string')
@@ -77,10 +75,30 @@ class ModerationNote extends ContentEntityBase implements ModerationNoteInterfac
       ->setDescription(t('The entity id this note is related to.'))
       ->setRequired(TRUE);
 
+    $fields['entity_field_name'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Entity'))
+      ->setDescription(t('The field name this note is related to.'))
+      ->setRequired(TRUE);
+
+    $fields['entity_langcode'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Entity'))
+      ->setDescription(t('The language this note is related to.'))
+      ->setRequired(TRUE);
+
+    $fields['entity_view_mode_id'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Entity'))
+      ->setDescription(t('The entity view mode this note is related to.'))
+      ->setRequired(TRUE);
+
     $fields['quote'] = BaseFieldDefinition::create('string_long')
-      ->setLabel(t('Selected text'))
-      ->setDescription(t('The text that was selected, if applicable.'))
+      ->setLabel(t('Quote'))
+      ->setDescription(t('The quote that was selected, if applicable.'))
       ->setSetting('max_length', 255)
+      ->setRequired(TRUE);
+
+    $fields['quote_offset'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Quote Offset'))
+      ->setDescription(t('The offset from the field ID for this quote.'))
       ->setRequired(TRUE);
 
     $fields['text'] = BaseFieldDefinition::create('string_long')
@@ -89,14 +107,14 @@ class ModerationNote extends ContentEntityBase implements ModerationNoteInterfac
       ->setSetting('max_length', FieldStorageConfig::NAME_MAX_LENGTH)
       ->setRequired(TRUE);
 
-    $fields['ranges'] = BaseFieldDefinition::create('map')
-      ->setLabel(t('Ranges'))
-      ->setDescription(t('The ranges of selection.'))
-      ->setRequired(TRUE);
-
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Created'))
       ->setDescription(t('The time that the entity was created.'))
+      ->setRequired(TRUE);
+
+    $fields['changed'] = BaseFieldDefinition::create('changed')
+      ->setLabel(t('Changed'))
+      ->setDescription(t('The time that the node was last edited.'))
       ->setRequired(TRUE);
 
     $fields['severity'] = BaseFieldDefinition::create('entity_reference')
@@ -128,44 +146,31 @@ class ModerationNote extends ContentEntityBase implements ModerationNoteInterfac
   /**
    * {@inheritdoc}
    */
-  public function getAuthor() {
-    if ($this->get('author')->target_id) {
-      return $this->get('author')->entity;
-    }
-    return NULL;
+  public function getOwner() {
+    return $this->get('uid')->entity;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getAuthorName() {
-    if ($author = $this->getAuthor()) {
-      return $author->label();
-    }
-    return NULL;
+  public function getOwnerId() {
+    return $this->getEntityKey('uid');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getAuthorImageUrl() {
-    /** @var \Drupal\user\Entity\User $author */
-    if ($author = $this->getAuthor()) {
-      /** @var \Drupal\Core\File\FileSystem $file_system */
-      if ($author->hasField('user_picture')) {
-        /** @var \Drupal\image\Plugin\Field\FieldType\ImageItem $user_picture */
-        $user_picture = $author->get('user_picture')->get(0);
-        if ($user_picture) {
-          $image_path = $user_picture->entity->getFileUri();
-        }
-      }
-    }
+  public function setOwnerId($uid) {
+    $this->set('uid', $uid);
+    return $this;
+  }
 
-    if (!isset($image_path)) {
-      $image_path = drupal_get_path('module', 'moderation_notes') . '/images/account.svg';
-    }
-
-    return file_create_url($image_path);
+  /**
+   * {@inheritdoc}
+   */
+  public function setOwner(UserInterface $account) {
+    $this->set('uid', $account->id());
+    return $this;
   }
 
   /**
@@ -217,6 +222,48 @@ class ModerationNote extends ContentEntityBase implements ModerationNoteInterfac
   /**
    * {@inheritdoc}
    */
+  public function getEntityFieldName() {
+    return $this->get('entity_field_name')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setEntityFieldName($field_name) {
+    $this->set('entity_field_name', $field_name);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityLanguage() {
+    return $this->get('entity_langcode')->getString();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setEntityLanguage($langcode) {
+    $this->set('entity_langcode', $langcode);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityViewModeId() {
+    return $this->get('entity_view_mode_id')->getString();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setEntityViewModeId($view_mode_id) {
+    $this->set('entity_view_mode_id', $view_mode_id);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCreatedTime() {
     return $this->get('created')->value;
   }
@@ -232,8 +279,22 @@ class ModerationNote extends ContentEntityBase implements ModerationNoteInterfac
    * {@inheritdoc}
    */
   public function setQuote($quote) {
-    if (is_string($quote)) {
-      $this->set('quote', $quote);
+    $this->set('quote', $quote);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getQuoteOffset() {
+    return $this->get('quote_offset')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setQuoteOffset($offset) {
+    if (is_int($offset)) {
+      $this->set('quote_offset', $offset);
     }
   }
 
@@ -248,25 +309,7 @@ class ModerationNote extends ContentEntityBase implements ModerationNoteInterfac
    * {@inheritdoc}
    */
   public function setText($text) {
-    if (is_string($text)) {
-      $this->set('text', $text);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRanges() {
-    return $this->get('ranges')->getValue();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setRanges($ranges) {
-    if (is_array($ranges)) {
-      $this->set('ranges', $ranges);
-    }
+    $this->set('text', $text);
   }
 
   /**

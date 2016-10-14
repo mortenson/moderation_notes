@@ -7,6 +7,26 @@
 
   "use strict";
 
+  Drupal.moderation_notes = {
+    selection: {
+      quote: false,
+      quote_offset: false,
+      field_id: false
+    },
+    util: {}
+  };
+
+  Drupal.moderation_notes.util.buildUrl = function (id, urlFormat) {
+    var parts = id.split('/');
+    return Drupal.formatString(decodeURIComponent(urlFormat), {
+      '!entity_type': parts[0],
+      '!id': parts[1],
+      '!field_name': parts[2],
+      '!langcode': parts[3],
+      '!view_mode': parts[4]
+    });
+  };
+
   /**
    * Modified from http://stackoverflow.com/a/5887719, written by @tpdown.
    */
@@ -16,9 +36,6 @@
     var match = false;
 
     if (window.find && window.getSelection) {
-      var spellcheck = document.body.spellcheck;
-      document.body.spellcheck = false;
-      document.designMode = 'on';
       var selection = window.getSelection();
       selection.collapse(element, 0);
 
@@ -39,9 +56,6 @@
         }
         selection.collapseToEnd();
       }
-
-      document.designMode = 'off';
-      document.body.spellcheck = spellcheck;
     }
 
     return match;
@@ -63,6 +77,17 @@
   document.addEventListener('selectionchange', function(e) {
     $tooltip.hide();
   }, false);
+
+  // Click callback.
+  $tooltip.on('click', function () {
+    var field_id = Drupal.moderation_notes.selection.field_id;
+    var form_ajax = new Drupal.ajax({
+      url: Drupal.moderation_notes.util.buildUrl(field_id, Drupal.url('moderation-notes/add/!entity_type/!id/!field_name/!langcode/!view_mode')),
+      dialogType: 'dialog_offcanvas'
+    });
+    form_ajax.execute();
+  });
+
   $('body').append($tooltip);
 
   $(document).on('mouseup', function (e) {
@@ -75,21 +100,52 @@
         var $ancestor = $(range.commonAncestorContainer);
         var $field = $ancestor.closest('[data-quickedit-field-id]');
         if ($field.length) {
+          var offset = getCursorPositionInTextOf($field[0], range);
+          // Positioning.
           var rect = range.getBoundingClientRect();
           var width_offset = (rect.width / 2) - ($tooltip.outerWidth() / 2);
           $tooltip.css('left', rect.left + document.body.scrollLeft + width_offset);
           $tooltip.css('top', rect.top + document.body.scrollTop - ($tooltip.outerHeight() + 5));
           $tooltip.show();
-          /*var offset = getCursorPositionInTextOf($field[0], range);
-          var match = doSearch(text, $field[0], offset);
-          if (match) {
-            selection.removeAllRanges();
-            selection.addRange(match);
-            document.execCommand('HiliteColor', false, 'yellow');
-          }*/
+          Drupal.moderation_notes.selection.quote = text;
+          Drupal.moderation_notes.selection.quote_offset = offset;
+          Drupal.moderation_notes.selection.field_id = $field.data('moderation-notes-field-id');
         }
       }
     }
   });
+
+  /**
+   * Contains all Moderation Notes behaviors.
+   *
+   * @type {Drupal~behavior}
+   */
+  Drupal.behaviors.moderation_notes = {
+    attach: function (context, settings) {
+      var $new_form = $('[data-moderation-notes-new-form]', context);
+      if ($new_form.length) {
+        $new_form.find('input[name="quote"]').val(Drupal.moderation_notes.selection.quote);
+        $new_form.find('input[name="quote_offset"]').val(Drupal.moderation_notes.selection.quote_offset);
+      }
+      if (settings.moderation_notes) {
+        var notes = settings.moderation_notes;
+        delete settings.moderation_notes;
+        var selection = window.getSelection();
+        for (var i in notes) {
+          var note = notes[i];
+          var $field = $('[data-moderation-notes-field-id="' + note.field_id + '"]');
+          if ($field.length) {
+            var match = doSearch(note.quote, $field[0], note.quote_offset);
+            if (match) {
+              var wrap = document.createElement('span');
+              wrap.classList = 'moderation-note';
+              match.surroundContents(wrap);
+              document.execCommand('HiliteColor', false, 'yellow');
+            }
+          }
+        }
+      }
+    }
+  }
 
 }(jQuery, Drupal));

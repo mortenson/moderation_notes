@@ -3,11 +3,13 @@
 namespace Drupal\moderation_notes;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityChangedInterface;
+use Drupal\user\EntityOwnerInterface;
 
 /**
  * Provides an interface defining a moderation_note entity.
  */
-interface ModerationNoteInterface extends ContentEntityInterface {
+interface ModerationNoteInterface extends ContentEntityInterface, EntityChangedInterface, EntityOwnerInterface {
 
   /**
    * Determines if the note has a parent.
@@ -24,30 +26,6 @@ interface ModerationNoteInterface extends ContentEntityInterface {
    *   The parent note, or NULL if this is not a reply.
    */
   public function getParent();
-
-  /**
-   * Gets the author that created this note.
-   *
-   * @return \Drupal\user\Entity\User|null
-   *   The author of this note, or NULL if there is no author.
-   */
-  public function getAuthor();
-
-  /**
-   * Gets the author's name.
-   *
-   * @return string|null
-   *   The author's label, or NULL if there is no author.
-   */
-  public function getAuthorName();
-
-  /**
-   * Gets a full URL to the image that represents the Author.
-   *
-   * @return string
-   *   A full URL that can be directly used in an <img> tag.
-   */
-  public function getAuthorImageUrl();
 
   /**
    * Gets the Entity that this note is related to.
@@ -92,6 +70,54 @@ interface ModerationNoteInterface extends ContentEntityInterface {
   public function setModeratedEntityById($entity_type_id, $entity_id);
 
   /**
+   * Gets the field name this note is related to.
+   *
+   * @return string
+   *   The machine name of an Entity field.
+   */
+  public function getEntityFieldName();
+
+  /**
+   * Sets the field name this note is related to.
+   *
+   * @param string $field_name
+   *   The machine name of an entity field.
+   */
+  public function setEntityFieldName($field_name);
+
+  /**
+   * Gets the related entity's language.
+   *
+   * @return string
+   *   A language's langcode.
+   */
+  public function getEntityLanguage();
+
+  /**
+   * Sets the related entity's language.
+   *
+   * @param string $langcode
+   *   A language's langcode.
+   */
+  public function setEntityLanguage($langcode);
+
+  /**
+   * Gets the related entity's view mode.
+   *
+   * @return string
+   *   The machine name of the view mode.
+   */
+  public function getEntityViewModeId();
+
+  /**
+   * Sets the related entity's view mode.
+   *
+   * @param string $view_mode_id
+   *   The machine name of a view mode.
+   */
+  public function setEntityViewModeId($view_mode_id);
+
+  /**
    * Gets the created timestamp for this note.
    *
    * @return integer
@@ -114,6 +140,22 @@ interface ModerationNoteInterface extends ContentEntityInterface {
    *   The text that was selected when the note was created.
    */
   public function setQuote($quote);
+
+  /**
+   * Gets the quoted text for this note.
+   *
+   * @return int
+   *   The offset relative to the parent field element for this quote.
+   */
+  public function getQuoteOffset();
+
+  /**
+   * Sets the quoted text offset for this note.
+   *
+   * @param int $offset
+   *   The offset relative to the parent field element for this quote.
+   */
+  public function setQuoteOffset($offset);
 
   /**
    * Gets the text content for this note.

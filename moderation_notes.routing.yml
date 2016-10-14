@@ -1,0 +1,12 @@
+moderation_notes.new:
+  path: '/moderation-notes/add/{entity_type}/{entity}/{field_name}/{langcode}/{view_mode_id}'
+  defaults:
+    _controller: '\Drupal\moderation_notes\Controller\ModerationNotesController::createNote'
+    _title: 'Add moderation note'
+  requirements:
+    _permission: 'create moderation notes'
+    _entity_access: 'entity.view'
+  options:
+    parameters:
+      entity:
+        type: entity:{entity_type}

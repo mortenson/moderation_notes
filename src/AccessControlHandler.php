@@ -4,6 +4,7 @@ namespace Drupal\moderation_notes;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityAccessControlHandler;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 
 /**
@@ -16,12 +17,14 @@ class AccessControlHandler extends EntityAccessControlHandler {
   /**
    * {@inheritdoc}
    */
-  protected function checkAccess(ModerationNoteInterface $entity, $operation, AccountInterface $account) {
+  protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
     switch ($operation) {
       case 'view':
         return AccessResult::allowedIfHasPermission($account, 'access moderation notes')
           ->cachePerPermissions()->cachePerUser()->addCacheableDependency($entity);
-
+      case 'create':
+        return AccessResult::allowedIfHasPermission($account, 'create moderation notes')
+          ->cachePerPermissions()->cachePerUser()->addCacheableDependency($entity);
       case 'update':
       case 'delete':
         return AccessResult::allowedIf($account->id() && $account->id() === $entity->getAuthor()->id())

@@ -36,3 +36,7 @@
 #moderation-notes-tooltip:hover::after {
   border-top: 10px solid #46a0f5;
 }
+
+.moderation-note {
+  background: yellow;
+}

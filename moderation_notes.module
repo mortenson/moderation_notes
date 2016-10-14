@@ -4,6 +4,33 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 
 /**
+ * Implements hook_entity_view_alter().
+ */
+function moderation_notes_entity_view_alter(&$build, EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
+  if (!_moderation_notes_access($entity)) {
+    return;
+  }
+
+  // Load notes for this entity.
+  $ids = \Drupal::entityQuery('moderation_note')
+    ->condition('entity_type', $entity->getEntityTypeId())
+    ->condition('entity_id', $entity->id())
+    ->execute();
+  /** @var \Drupal\moderation_notes\ModerationNoteInterface[] $notes */
+  $notes = \Drupal::entityTypeManager()->getStorage('moderation_note')->loadMultiple($ids);
+  foreach ($notes as $note) {
+    $setting = [
+      'field_id' => $note->getModeratedEntityTypeId() . '/' . $note->getModeratedEntityId() . '/' . $note->getEntityFieldName() . '/' . $note->getEntityLanguage() . '/' . $note->getEntityViewModeId(),
+      'text' => $note->getText(),
+      'quote' => $note->getQuote(),
+      'quote_offset' => $note->getQuoteOffset(),
+      'user' => $note->getOwner()->label(),
+    ];
+    $build['#attached']['drupalSettings']['moderation_notes'][$note->id()] = $setting;
+  }
+}
+
+/**
  * Implements hook_preprocess_HOOK() for field templates.
  */
 function moderation_notes_preprocess_field(&$variables) {
