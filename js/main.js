@@ -107,12 +107,15 @@
 
   /**
    * Initializes the tooltip used to add new notes.
+   *
+   * @returns {Object}
+   *   The tooltip.
    */
-  function initializeTooltip () {
-    var $tooltip = $('<a id="moderation-notes-tooltip" href="javascript:;">' + Drupal.t('Add note') + '</a>').hide();
+  function initializeAddTooltip () {
+    var $tooltip = $('<a class="moderation-notes-tooltip add" href="javascript:;">' + Drupal.t('Add note') + '</a>').hide();
 
     // Click callback.
-    $tooltip.on('click', function () {
+    $tooltip.off('click.moderation_notes').on('click.moderation_notes', function () {
       var field_id = Drupal.moderation_notes.selection.field_id;
       var form_ajax = new Drupal.ajax({
         url: buildUrl(field_id, Drupal.url('moderation-notes/add/!entity_type/!id/!field_name/!langcode/!view_mode')),
@@ -127,18 +130,59 @@
   }
 
   /**
+   * Initializes the tooltip used to view existing notes.
+   *
+   * @returns {Object}
+   *   The tooltip.
+   */
+  function initializeViewTooltip () {
+    var $tooltip = $('<a class="moderation-notes-tooltip view" href="javascript:;">' + Drupal.t('View note') + '</a>').hide();
+
+    // Click callback.
+    $tooltip.off('click.moderation_notes').on('click.moderation_notes', function () {
+      $(this).fadeOut('fast');
+      var url = decodeURIComponent(Drupal.url('moderation-note/!id'));
+      var view_ajax = new Drupal.ajax({
+        url: Drupal.formatString(url, {'!id': $(this).data('moderation_note_id')}),
+        dialogType: 'dialog_offcanvas'
+      });
+      view_ajax.execute();
+    });
+
+    $('body').append($tooltip);
+
+    return $tooltip;
+  }
+
+  /**
    * Displays the tooltip at a position relative to the current Range.
    *
    * @param {Object} $tooltip
    *   The tooltip.
    */
-  function showTooltip ($tooltip) {
+  function showAddTooltip ($tooltip) {
     var range = window.getSelection().getRangeAt(0);
     var rect = range.getBoundingClientRect();
     var width_offset = (rect.width / 2) - ($tooltip.outerWidth() / 2);
     $tooltip.css('left', rect.left + document.body.scrollLeft + width_offset);
     $tooltip.css('top', rect.top + document.body.scrollTop - ($tooltip.outerHeight() + 5));
-    $tooltip.show();
+    $tooltip.fadeIn('fast');
+  }
+
+  /**
+   * Displays the tooltip at a position relative to the given element.
+   *
+   * @param {Object} $tooltip
+   *   The tooltip.
+   * @param {Object} $element
+   *   The element to display to tooltip on.
+   */
+  function showViewTooltip ($tooltip, $element) {
+    var width_offset = ($element.outerWidth() / 2) - ($tooltip.outerWidth() / 2);
+    var offset = $element.offset();
+    $tooltip.css('left', offset.left + width_offset);
+    $tooltip.css('top', offset.top - ($tooltip.outerHeight() + 5));
+    $tooltip.fadeIn('fast');
   }
 
   /**
@@ -155,40 +199,47 @@
         var match = doSearch(note.quote, $field[0], note.quote_offset);
         if (match) {
           var wrap = document.createElement('span');
-          wrap.classList = 'moderation-note';
-          match.surroundContents(wrap);
-          document.execCommand('HiliteColor', false, 'yellow');
+          wrap.classList = 'moderation-note-highlight';
+          wrap.dataset.moderation_note_id = i;
+          wrap.appendChild(match.extractContents());
+          match.insertNode(wrap);
         }
       }
     }
   }
 
-  var $tooltip = initializeTooltip();
+  var $add_tooltip = initializeAddTooltip();
+  var $view_tooltip = initializeViewTooltip();
 
-  document.addEventListener('selectionchange', function(e) {
-    $tooltip.hide();
+  var timeout;
+  document.addEventListener('selectionchange', function () {
+    clearTimeout(timeout);
+    $add_tooltip.fadeOut('fast');
 
-    if (window.getSelection) {
-      var selection = window.getSelection();
-      var text = selection.toString();
-      if (text.length) {
-        // Ensure that this selection is contained inside a field wrapper.
-        var range = selection.getRangeAt(0);
-        var $ancestor = $(range.commonAncestorContainer);
-        var $field = $ancestor.closest('[data-quickedit-field-id]');
-        if ($field.length) {
-          // Show the tooltip.
-          showTooltip($tooltip);
+    // We use timeouts to throttle calls to this event.
+    timeout = setTimeout(function () {
+      if (window.getSelection) {
+        var selection = window.getSelection();
+        var text = selection.toString();
+        if (text.length) {
+          // Ensure that this selection is contained inside a field wrapper.
+          var range = selection.getRangeAt(0);
+          var $ancestor = $(range.commonAncestorContainer);
+          var $field = $ancestor.closest('[data-moderation-notes-field-id]');
+          if ($field.length) {
+            // Show the tooltip.
+            showAddTooltip($add_tooltip);
 
-          // Store the current selection so that it can be added to the form
-          // later.
-          var offset = getCursorPositionInTextOf($field[0], range);
-          Drupal.moderation_notes.selection.quote = text;
-          Drupal.moderation_notes.selection.quote_offset = offset;
-          Drupal.moderation_notes.selection.field_id = $field.data('moderation-notes-field-id');
+            // Store the current selection so that it can be added to the form
+            // later.
+            var offset = getCursorPositionInTextOf($field[0], range);
+            Drupal.moderation_notes.selection.quote = text;
+            Drupal.moderation_notes.selection.quote_offset = offset;
+            Drupal.moderation_notes.selection.field_id = $field.data('moderation-notes-field-id');
+          }
         }
       }
-    }
+    }, 500);
   });
 
   /**
@@ -208,7 +259,35 @@
         var notes = settings.moderation_notes;
         delete settings.moderation_notes;
         showModerationNotes(notes);
+        $('#drupal-offcanvas').dialog().dialog('close');
       }
+
+      if (settings.moderation_note_delete) {
+        var note_id = settings.moderation_note_delete;
+        delete settings.moderation_notes;
+        var $wrapper = $('.moderation-note-highlight[data-moderation_note_id="' + note_id + '"]');
+        $wrapper.contents().unwrap();
+        $('#drupal-offcanvas').dialog().dialog('close');
+      }
+
+      var timeout;
+
+      var $moderation_notes = $('.moderation-note-highlight');
+      $moderation_notes.off('mouseover.moderation_notes').on('mouseover.moderation_notes', function () {
+        showViewTooltip($view_tooltip, $(this));
+        $view_tooltip.data('moderation_note_id', $(this).data('moderation_note_id'));
+        clearTimeout(timeout);
+      });
+
+      $moderation_notes.add($view_tooltip).off('mouseleave.moderation_notes').on('mouseleave.moderation_notes', function () {
+        timeout = setTimeout(function () {
+          $view_tooltip.fadeOut('fast');
+        }, 500);
+      });
+
+      $view_tooltip.off('mouseover.moderation_notes').on('mouseover.moderation_notes', function () {
+        clearTimeout(timeout);
+      });
     }
   }
 

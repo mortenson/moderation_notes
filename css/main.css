@@ -1,4 +1,4 @@
-#moderation-notes-tooltip {
+.moderation-notes-tooltip {
   position: absolute;
   background: #277abd;
   border: 0;
@@ -10,17 +10,15 @@
   font-family: "Lucida Grande", 'Lucida Sans Unicode','liberation sans', sans-serif;
 }
 
-#moderation-notes-tooltip:hover {
+.moderation-notes-tooltip:hover,
+.moderation-notes-tooltip:focus {
   outline: none;
   border: 0;
+  color: white;
   background: #46a0f5;
 }
 
-#moderation-notes-tooltip:focus {
-  outline: none;
-}
-
-#moderation-notes-tooltip::after {
+.moderation-notes-tooltip::after {
   content: " ";
   position: absolute;
   left: calc(50% - 10px);
@@ -33,10 +31,49 @@
   transition: border-top .5s ease;
 }
 
-#moderation-notes-tooltip:hover::after {
+.moderation-notes-tooltip:hover::after,
+.moderation-notes-tooltip:focus::after{
   border-top: 10px solid #46a0f5;
 }
 
-.moderation-note {
+.moderation-note-highlight {
   background: yellow;
+}
+
+.moderation-note {
+  background: #2d6c9e;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.moderation-note .moderation-note-text {
+  min-height: 100px;
+}
+
+.moderation-note .moderation-note-owner,
+.moderation-note .moderation-note-owner a {
+  font-size: 12px;
+  text-align: right;
+}
+
+.moderation-note .moderation-note-actions {
+  background: #4787b9;
+  text-align: right;
+  margin-left: -10px;
+  margin-bottom: -10px;
+  margin-top: 10px;
+  width: calc(100% + 20px);
+}
+
+.ui-dialog-offcanvas .moderation-note-actions a {
+  display: inline-block;
+  padding: 10px;
+  font-size: 13px;
+  background: transparent;
+  transition: .2s ease;
+}
+
+.ui-dialog-offcanvas .moderation-note-actions a:hover {
+  background: #376189;
+  color: white;
 }

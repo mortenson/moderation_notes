@@ -6,9 +6,9 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\content_moderation\ModerationInformation;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\moderation_notes\Entity\ModerationNote;
+use Drupal\moderation_notes\ModerationNoteInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Endpoints for the Moderation Notes module.
@@ -57,9 +57,6 @@ class ModerationNotesController extends ControllerBase {
    *
    * @return array
    *   A render array representing the form.
-   *
-   * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
-   *   Thrown if invalid data is present in the request.
    */
   public function createNote(EntityInterface $entity, $field_name, $langcode, $view_mode_id, Request $request) {
     $values = [
@@ -70,9 +67,49 @@ class ModerationNotesController extends ControllerBase {
       'entity_view_mode_id' => $view_mode_id,
     ];
     $moderation_note = ModerationNote::create($values);
-    $form = $this->entityFormBuilder()->getForm($moderation_note);
+    $form = $this->entityFormBuilder()->getForm($moderation_note, 'create');
     $form['#attributes']['data-moderation-notes-new-form'] = TRUE;
     return $form;
+  }
+
+  /**
+   * Views an individual moderation note.
+   *
+   * @param \Drupal\moderation_notes\ModerationNoteInterface $moderation_note
+   *   The moderation note you want to view.
+   *
+   * @return array
+   *   A render array representing the moderation note.
+   */
+  public function viewNote(ModerationNoteInterface $moderation_note) {
+    $view_builder = $this->entityTypeManager()->getViewBuilder('moderation_note');
+    return $view_builder->view($moderation_note);
+  }
+
+  /**
+   * Deletes an individual moderation note.
+   *
+   * @param \Drupal\moderation_notes\ModerationNoteInterface $moderation_note
+   *   The moderation note you want to delete.
+   *
+   * @return array
+   *   A render array representing the deletion form.
+   */
+  public function deleteNote(ModerationNoteInterface $moderation_note) {
+    return $this->entityFormBuilder()->getForm($moderation_note, 'delete');
+  }
+
+  /**
+   * Edits an individual moderation note.
+   *
+   * @param \Drupal\moderation_notes\ModerationNoteInterface $moderation_note
+   *   The moderation note you want to edit.
+   *
+   * @return array
+   *   A render array representing the edit form.
+   */
+  public function editNote(ModerationNoteInterface $moderation_note) {
+    return $this->entityFormBuilder()->getForm($moderation_note, 'edit');
   }
 
 }

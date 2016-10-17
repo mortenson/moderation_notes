@@ -19,8 +19,11 @@ use Drupal\user\UserInterface;
  *   label = @Translation("Moderation note"),
  *   handlers = {
  *     "access" = "Drupal\moderation_notes\AccessControlHandler",
+ *     "view_builder" = "Drupal\moderation_notes\ModerationNoteViewBuilder",
  *     "form" = {
- *       "default" = "Drupal\moderation_notes\ModerationNoteForm",
+ *       "create" = "Drupal\moderation_notes\ModerationNoteForm",
+ *       "edit" = "Drupal\moderation_notes\ModerationNoteForm",
+ *       "delete" = "Drupal\moderation_notes\Form\ModerationNoteDeleteForm"
  *     }
  *   },
  *   base_table = "moderation_note",

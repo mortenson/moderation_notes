@@ -1,6 +1,8 @@
 <?php
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
+use Drupal\moderation_notes\ModerationNoteInterface;
 
 /**
  * Implements hook_entity_view_alter().
@@ -22,7 +24,7 @@ function moderation_notes_entity_view_alter(&$build, EntityInterface $entity, \D
   $notes = \Drupal::entityTypeManager()->getStorage('moderation_note')->loadMultiple($ids);
   foreach ($notes as $note) {
     $setting = [
-      'field_id' => $note->getModeratedEntityTypeId() . '/' . $note->getModeratedEntityId() . '/' . $note->getEntityFieldName() . '/' . $note->getEntityLanguage() . '/' . $note->getEntityViewModeId(),
+      'field_id' => _moderation_notes_generate_field_id($note),
       'text' => $note->getText(),
       'quote' => $note->getQuote(),
       'quote_offset' => $note->getQuoteOffset(),
@@ -41,8 +43,18 @@ function moderation_notes_preprocess_field(&$variables) {
   $element = $variables['element'];
   /** @var $entity \Drupal\Core\Entity\EntityInterface */
   $entity = $element['#object'];
+  /** @var \Drupal\Core\Field\FieldItemList $field_list */
+  $field_list = $element['#items'];
+  $field_definition = $field_list->getFieldDefinition();
 
+  // Check access for moderation notes.
   if (!_moderation_notes_access($entity)) {
+    return;
+  }
+
+  // Check the field type - we only support text fields at this time.
+  $supported_types = ['string', 'text', 'text_long', 'text_with_summary'];
+  if (!in_array($field_definition->getType(), $supported_types, TRUE)) {
     return;
   }
 
@@ -71,4 +83,93 @@ function _moderation_notes_access(EntityInterface $entity) {
   && $moderation_information->isModeratedEntity($entity)
   && $moderation_information->isLatestRevision($entity)
   && !$entity->isNew();
+}
+
+/**
+ * Implements hook_theme().
+ */
+function moderation_notes_theme() {
+  return [
+    'moderation_note' => [
+      'render element' => 'elements',
+    ],
+  ];
+}
+
+
+/**
+ * Prepares variables for moderation_note templates.
+ *
+ * Default template: moderation-note.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An array of elements to display in view mode.
+ */
+function template_preprocess_moderation_note(&$variables) {
+  $variables['moderation_note'] = $variables['elements']['#moderation_note'];
+  /** @var \Drupal\moderation_notes\ModerationNoteInterface $note */
+  $note = $variables['moderation_note'];
+  $variables['text'] = $note->getText();
+  $variables['quote'] = $note->getQuote();
+  $variables['field_name'] = $note->getEntityFieldName();
+  $variables['created'] = $note->getCreatedTime();
+  $variables['created_pretty'] = _moderation_notes_pretty_time($note->getCreatedTime());
+  $variables['updated'] = $note->getChangedTime();
+  $variables['updated_pretty'] = _moderation_notes_pretty_time($note->getChangedTime());
+  $owner = $note->getOwner();
+  $variables['author_name'] = $owner->getDisplayName();
+  $variables['author_link'] = $owner->toLink()->toRenderable();
+  $variables['author_username'] = $owner->label();
+  $variables['author_picture'] = user_view($owner, 'compact');
+  $variables['attributes']['class'][] = 'moderation-note';
+
+  // We show note actions inline with the note, if the user has access.
+  $params = ['moderation_note' => $note->id()];
+  if ($note->access('update')) {
+    $url = Url::fromRoute('moderation_notes.edit', $params);
+    $variables['edit_button'] = [
+      '#type' => 'link',
+      '#title' => t('Edit'),
+      '#url' => $url,
+      '#attributes' => [
+        'class' => ['use-ajax'],
+        'data-dialog-type' => 'dialog',
+        'data-dialog-renderer' => 'offcanvas',
+      ],
+    ];
+  }
+  if ($note->access('delete')) {
+    $url = Url::fromRoute('moderation_notes.delete', $params);
+    $variables['delete_button'] = [
+      '#type' => 'link',
+      '#title' => t('Delete'),
+      '#url' => $url,
+      '#attributes' => [
+        'class' => ['use-ajax'],
+        'data-dialog-type' => 'dialog',
+        'data-dialog-renderer' => 'offcanvas',
+      ],
+    ];
+  }
+  //$variables['reply_access'] = $note->access('create');
+}
+
+function _moderation_notes_pretty_time($time) {
+  $time = (int) $time;
+  $too_old = strtotime('-1 month');
+  // Show formatted time differences for edits younger than a month.
+  if ($time > $too_old) {
+    $diff = \Drupal::service('date.formatter')->formatTimeDiffSince($time, ['granularity' => 1]);
+    $time_pretty = t('@diff ago', ['@diff' => $diff]);
+  }
+  else {
+    $date = date('m/d/Y - h:i A', $time);
+    $time_pretty = t('on @date', ['@date' => $date]);
+  }
+  return $time_pretty;
+}
+
+function _moderation_notes_generate_field_id(ModerationNoteInterface $note) {
+  return $note->getModeratedEntityTypeId() . '/' . $note->getModeratedEntityId() . '/' . $note->getEntityFieldName() . '/' . $note->getEntityLanguage() . '/' . $note->getEntityViewModeId();
 }

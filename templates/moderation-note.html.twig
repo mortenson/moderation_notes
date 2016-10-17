@@ -1,0 +1,19 @@
+<div {{ attributes }}>
+    <div class="moderation-note-text">
+        {{ text }}
+    </div>
+    <div class="moderation-note-owner">
+        {{ author_link }} {{ created_pretty }}
+    </div>
+    <div class="moderation-note-actions">
+        {% if edit_button %}
+            {{ edit_button }}
+        {% endif %}
+        {% if delete_button %}
+            {{ delete_button }}
+        {% endif %}
+        {% if reply_button %}
+            {{ reply_button }}
+        {% endif %}
+    </div>
+</div>

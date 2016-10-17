@@ -17,8 +17,13 @@ class ModerationNoteForm extends ContentEntityForm {
     /** @var \Drupal\moderation_notes\Entity\ModerationNote $moderation_note */
     $moderation_note = $this->entity;
 
+    // Wrap our form so that our submit callback can re-render the form.
+    $form['#prefix'] = '<div id="moderation-note-form-wrapper">';
+    $form['#suffix'] = '</div>';
+
     $form['quote'] = [
       '#type' => 'textfield',
+      '#required' => TRUE,
       '#attributes' => [
         'class' => ['visually-hidden'],
       ],
@@ -27,6 +32,7 @@ class ModerationNoteForm extends ContentEntityForm {
 
     $form['quote_offset'] = [
       '#type' => 'textfield',
+      '#required' => TRUE,
       '#attributes' => [
         'class' => ['visually-hidden'],
       ],
@@ -35,7 +41,7 @@ class ModerationNoteForm extends ContentEntityForm {
 
     $form['text'] = [
       '#type' => 'textarea',
-      '#title' => $this->t('Note'),
+      '#required' => TRUE,
       '#default_value' => $moderation_note->getText(),
     ];
 
@@ -45,8 +51,46 @@ class ModerationNoteForm extends ContentEntityForm {
   /**
    * {@inheritdoc}
    */
+  protected function actions(array $form, FormStateInterface $form_state) {
+    $actions['submit'] = array(
+      '#type' => 'submit',
+      '#value' => $this->t('Save'),
+      '#ajax' => [
+        'callback' => '::submitForm',
+        'wrapper' => 'moderation-note-form-wrapper',
+        'method' => 'replace',
+        'disable-refocus' => TRUE,
+      ],
+    );
+
+    return $actions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
+    parent::save($form, $form_state);
+
+    /** @var \Drupal\moderation_notes\ModerationNoteInterface $note */
+    $note = $this->entity;
+
+    if ($this->getOperation() === 'create') {
+      $setting = [
+        'field_id' => _moderation_notes_generate_field_id($note),
+        'text' => $note->getText(),
+        'quote' => $note->getQuote(),
+        'quote_offset' => $note->getQuoteOffset(),
+        'user' => $note->getOwner()->label(),
+      ];
+      $form['#attached']['drupalSettings']['moderation_notes'][$note->id()] = $setting;
+    }
+    else {
+      $form = $this->entityTypeManager->getViewBuilder('moderation_note')->view($note);
+    }
+
+    return $form;
   }
 
 }

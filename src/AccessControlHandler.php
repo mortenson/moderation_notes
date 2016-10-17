@@ -27,7 +27,7 @@ class AccessControlHandler extends EntityAccessControlHandler {
           ->cachePerPermissions()->cachePerUser()->addCacheableDependency($entity);
       case 'update':
       case 'delete':
-        return AccessResult::allowedIf($account->id() && $account->id() === $entity->getAuthor()->id())
+        return AccessResult::allowedIf($account->id() && $account->id() === $entity->getOwner()->id())
           ->orIf(AccessResult::allowedIfHasPermission($account, 'administer moderation notes'))
           ->cachePerPermissions()->cachePerUser()->addCacheableDependency($entity);
 
