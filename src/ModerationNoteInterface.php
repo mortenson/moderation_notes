@@ -173,28 +173,4 @@ interface ModerationNoteInterface extends ContentEntityInterface, EntityChangedI
    */
   public function setText($text);
 
-  /**
-   * Gets the severity Entity associated with this note.
-   *
-   * @return \Drupal\moderation_notes\Entity\ModerationNoteSeverity|null
-   *   The ModerationNoteSeverity Entity, or NULL if there is none.
-   */
-  public function getSeverity();
-
-  /**
-   * Gets the severity ID for this note.
-   *
-   * @return string
-   *   The severity ID for this note.
-   */
-  public function getSeverityId();
-
-  /**
-   * Sets the severity ID for this note.
-   *
-   * @param string $id
-   *   The severity ID for this note.
-   */
-  public function setSeverityId($id);
-
 }

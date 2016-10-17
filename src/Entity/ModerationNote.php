@@ -117,12 +117,6 @@ class ModerationNote extends ContentEntityBase implements ModerationNoteInterfac
       ->setDescription(t('The time that the node was last edited.'))
       ->setRequired(TRUE);
 
-    $fields['severity'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('Severity'))
-      ->setSetting('target_type', 'moderation_note_severity')
-      ->setDescription(t('The severity for this note.'))
-      ->setRequired(TRUE);
-
     return $fields;
   }
 
@@ -310,32 +304,6 @@ class ModerationNote extends ContentEntityBase implements ModerationNoteInterfac
    */
   public function setText($text) {
     $this->set('text', $text);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSeverity() {
-    return ModerationNoteSeverity::load($this->getSeverityId());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSeverityId() {
-    return $this->get('severity')->getString();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setSeverityId($id) {
-    if ($id === 'default') {
-      $this->set('severity', NULL);
-    }
-    else if (ModerationNoteSeverity::load($id)) {
-      $this->set('severity', $id);
-    }
   }
 
 }

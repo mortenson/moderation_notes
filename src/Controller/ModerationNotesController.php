@@ -68,7 +68,6 @@ class ModerationNotesController extends ControllerBase {
       'entity_field_name' => $field_name,
       'entity_langcode' => $langcode,
       'entity_view_mode_id' => $view_mode_id,
-      'severity' => 'default',
     ];
     $moderation_note = ModerationNote::create($values);
     $form = $this->entityFormBuilder()->getForm($moderation_note);

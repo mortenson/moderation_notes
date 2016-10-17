@@ -1,7 +1,6 @@
 <?php
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
 
 /**
  * Implements hook_entity_view_alter().
@@ -72,16 +71,4 @@ function _moderation_notes_access(EntityInterface $entity) {
   && $moderation_information->isModeratedEntity($entity)
   && $moderation_information->isLatestRevision($entity)
   && !$entity->isNew();
-}
-
-/**
- * Implements hook_entity_bundle_field_info_alter().
- */
-function moderation_notes_entity_bundle_field_info_alter(&$fields, EntityTypeInterface $entity_type, $bundle) {
-  /** @var \Drupal\content_moderation\ModerationInformation $moderation_information */
-  $moderation_information = \Drupal::service('content_moderation.moderation_information');
-
-  if ($moderation_information->shouldModerateEntitiesOfBundle($entity_type, $bundle) && !empty($fields['moderation_state'])) {
-    $fields['moderation_state']->addConstraint('ModerationNotes', []);
-  }
 }

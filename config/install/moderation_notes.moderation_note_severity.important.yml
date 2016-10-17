@@ -1,8 +1,0 @@
-id: important
-label: Important
-severity_level: medium
-blocked_moderation_transitions:
- - needs_review_published
- - draft_published
- - draft_needs_review
- - archived_published
