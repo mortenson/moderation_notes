@@ -15,7 +15,10 @@ function moderation_notes_entity_view_alter(&$build, EntityInterface $entity, \D
   $ids = \Drupal::entityQuery('moderation_note')
     ->condition('entity_type', $entity->getEntityTypeId())
     ->condition('entity_id', $entity->id())
+    ->condition('entity_langcode', $entity->language()->getId())
+    ->condition('entity_view_mode_id', $display->getOriginalMode())
     ->execute();
+
   /** @var \Drupal\moderation_notes\ModerationNoteInterface[] $notes */
   $notes = \Drupal::entityTypeManager()->getStorage('moderation_note')->loadMultiple($ids);
   foreach ($notes as $note) {
