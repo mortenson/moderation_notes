@@ -133,6 +133,7 @@
    *   The tooltip.
    */
   function showTooltip ($tooltip) {
+    var range = window.getSelection().getRangeAt(0);
     var rect = range.getBoundingClientRect();
     var width_offset = (rect.width / 2) - ($tooltip.outerWidth() / 2);
     $tooltip.css('left', rect.left + document.body.scrollLeft + width_offset);
@@ -165,6 +166,8 @@
   var $tooltip = initializeTooltip();
 
   document.addEventListener('selectionchange', function(e) {
+    $tooltip.hide();
+
     if (window.getSelection) {
       var selection = window.getSelection();
       var text = selection.toString();
