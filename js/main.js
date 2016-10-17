@@ -141,9 +141,8 @@
     // Click callback.
     $tooltip.off('click.moderation_notes').on('click.moderation_notes', function () {
       $(this).fadeOut('fast');
-      var url = decodeURIComponent(Drupal.url('moderation-note/!id'));
       var view_ajax = new Drupal.ajax({
-        url: Drupal.formatString(url, {'!id': $(this).data('moderation_note_id')}),
+        url: Drupal.formatString(Drupal.url('moderation-note/!id'), {'!id': $(this).data('moderation_note_id')}),
         dialogType: 'dialog_offcanvas'
       });
       view_ajax.execute();
@@ -262,12 +261,22 @@
         $('#drupal-offcanvas').dialog().dialog('close');
       }
 
-      if (settings.moderation_note_delete) {
-        var note_id = settings.moderation_note_delete;
-        delete settings.moderation_notes;
+      if (settings.moderation_note_deleted) {
+        var note_id = settings.moderation_note_deleted;
+        delete settings.moderation_note_deleted;
         var $wrapper = $('.moderation-note-highlight[data-moderation_note_id="' + note_id + '"]');
         $wrapper.contents().unwrap();
         $('#drupal-offcanvas').dialog().dialog('close');
+      }
+
+      if (settings.moderation_note_edited) {
+        var note_id = settings.moderation_note_edited;
+        delete settings.moderation_note_edited;
+        var view_ajax = new Drupal.ajax({
+          url: Drupal.formatString(Drupal.url('moderation-note/!id'), {'!id': note_id}),
+          dialogType: 'dialog_offcanvas'
+        });
+        view_ajax.execute();
       }
 
       var timeout;

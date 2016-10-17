@@ -87,7 +87,7 @@ class ModerationNoteForm extends ContentEntityForm {
       $form['#attached']['drupalSettings']['moderation_notes'][$note->id()] = $setting;
     }
     else {
-      $form = $this->entityTypeManager->getViewBuilder('moderation_note')->view($note);
+      $form['#attached']['drupalSettings']['moderation_note_edited'] = $note->id();
     }
 
     return $form;

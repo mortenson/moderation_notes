@@ -67,7 +67,7 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
-    $form['#attached']['drupalSettings']['moderation_note_delete'] = $this->getEntity()->id();
+    $form['#attached']['drupalSettings']['moderation_note_deleted'] = $this->getEntity()->id();
     return $form;
   }
 
