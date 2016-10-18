@@ -15,6 +15,10 @@
     }
   };
 
+  var $add_tooltip = initializeAddTooltip();
+  var $view_tooltip = initializeViewTooltip();
+  var view_tooltip_timeout;
+
   /**
    * Command to remove a Moderation Note.
    *
@@ -209,6 +213,16 @@
 
     $('body').append($tooltip);
 
+    $tooltip.on('mouseleave', function () {
+      view_tooltip_timeout = setTimeout(function () {
+        $tooltip.fadeOut('fast');
+      }, 500);
+    });
+
+    $tooltip.on('mouseover', function () {
+      clearTimeout(view_tooltip_timeout);
+    });
+
     return $tooltip;
   }
 
@@ -259,19 +273,31 @@
         wrap.dataset.moderation_note_id = note.id;
         wrap.appendChild(match.extractContents());
         match.insertNode(wrap);
+
+        // Attach behaviors for the note.
+        var $wrap = $(wrap);
+
+        $wrap.on('mouseover', function () {
+          showViewTooltip($view_tooltip, $(this));
+          $view_tooltip.data('moderation_note_id', $(this).data('moderation_note_id'));
+          clearTimeout(view_tooltip_timeout);
+        });
+
+        $wrap.on('mouseleave', function () {
+          view_tooltip_timeout = setTimeout(function () {
+            $view_tooltip.fadeOut('fast');
+          }, 500);
+        });
       }
     }
   }
 
-  var $add_tooltip = initializeAddTooltip();
-  var $view_tooltip = initializeViewTooltip();
-
+  // We use timeouts to throttle calls to this event.
   var timeout;
   document.addEventListener('selectionchange', function () {
     clearTimeout(timeout);
     $add_tooltip.fadeOut('fast');
 
-    // We use timeouts to throttle calls to this event.
     timeout = setTimeout(function () {
       if (window.getSelection) {
         var selection = window.getSelection();
@@ -310,6 +336,7 @@
         $new_form.find('input[name="quote_offset"]').val(Drupal.moderation_notes.selection.quote_offset);
       }
 
+      // On page load, display all note given to us.
       if (settings.moderation_notes) {
         var notes = settings.moderation_notes;
         delete settings.moderation_notes;
@@ -319,25 +346,6 @@
         }
         $('#drupal-offcanvas').dialog().dialog('close');
       }
-
-      var timeout;
-
-      var $moderation_notes = $('.moderation-note-highlight');
-      $moderation_notes.off('mouseover.moderation_notes').on('mouseover.moderation_notes', function () {
-        showViewTooltip($view_tooltip, $(this));
-        $view_tooltip.data('moderation_note_id', $(this).data('moderation_note_id'));
-        clearTimeout(timeout);
-      });
-
-      $moderation_notes.add($view_tooltip).off('mouseleave.moderation_notes').on('mouseleave.moderation_notes', function () {
-        timeout = setTimeout(function () {
-          $view_tooltip.fadeOut('fast');
-        }, 500);
-      });
-
-      $view_tooltip.off('mouseover.moderation_notes').on('mouseover.moderation_notes', function () {
-        clearTimeout(timeout);
-      });
     }
   }
 
