@@ -25,10 +25,9 @@ function moderation_notes_entity_view_alter(&$build, EntityInterface $entity, \D
   foreach ($notes as $note) {
     $setting = [
       'field_id' => _moderation_notes_generate_field_id($note),
-      'text' => $note->getText(),
+      'id' => $note->id(),
       'quote' => $note->getQuote(),
       'quote_offset' => $note->getQuoteOffset(),
-      'user' => $note->getOwner()->label(),
     ];
     $build['#attached']['drupalSettings']['moderation_notes'][$note->id()] = $setting;
   }

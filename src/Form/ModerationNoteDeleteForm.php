@@ -2,8 +2,10 @@
 
 namespace Drupal\moderation_notes\Form;
 
+use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Entity\ContentEntityDeleteForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\moderation_notes\Ajax\RemoveModerationNoteCommand;
 
 /**
  * Provides a form for deleting a moderation note.
@@ -67,8 +69,10 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
-    $form['#attached']['drupalSettings']['moderation_note_deleted'] = $this->getEntity()->id();
-    return $form;
+    $response = new AjaxResponse();
+    $command = new RemoveModerationNoteCommand($this->getEntity());
+    $response->addCommand($command);
+    return $response;
   }
 
 }

@@ -16,6 +16,65 @@
   };
 
   /**
+   * Command to remove a Moderation Note.
+   *
+   * @param {Drupal.Ajax} [ajax]
+   *   The ajax object.
+   * @param {Object} response
+   *   Object holding the server response.
+   * @param {String} response.id
+   *   The ID for the moderation note.
+   * @param {Number} [status]
+   *   The HTTP status code.
+   */
+  Drupal.AjaxCommands.prototype.remove_moderation_note = function (ajax, response, status) {
+    var id = response.id;
+    var $wrapper = $('.moderation-note-highlight[data-moderation_note_id="' + id + '"]');
+    $wrapper.contents().unwrap();
+    $('#drupal-offcanvas').dialog().dialog('close');
+  };
+
+  /**
+   * Command to add a Moderation Note.
+   *
+   * @param {Drupal.Ajax} [ajax]
+   *   The ajax object.
+   * @param {Object} response
+   *   Object holding the server response.
+   * @param {Object} response.note
+   *   An object representing a moderation note.
+   * @param {Number} [status]
+   *   The HTTP status code.
+   */
+  Drupal.AjaxCommands.prototype.add_moderation_note = function (ajax, response, status) {
+    var note = response.note;
+    showModerationNote(note);
+    $('#drupal-offcanvas').dialog().dialog('close');
+  };
+
+  /**
+   * Command to show a Moderation Note in the sidebar.
+   *
+   * @param {Drupal.Ajax} [ajax]
+   *   The ajax object.
+   * @param {Object} response
+   *   Object holding the server response.
+   * @param {Number} response.id
+   *   The ID for the moderation note.
+   * @param {Number} [status]
+   *   The HTTP status code.
+   */
+  Drupal.AjaxCommands.prototype.show_moderation_note = function (ajax, response, status) {
+    $('#drupal-offcanvas').fadeOut('fast');
+    var note_id = response.id;
+    var view_ajax = new Drupal.ajax({
+        url: Drupal.formatString(Drupal.url('moderation-note/!id'), {'!id': note_id}),
+        dialogType: 'dialog_offcanvas'
+    });
+    view_ajax.execute();
+  };
+
+  /**
    * Builds a URL based on a given field ID.
    *
    * Identical to Drupal.quickedit.utils.buildUrl.
@@ -185,24 +244,21 @@
   }
 
   /**
-   * Shows the given moderation notes as highlighted ranges.
+   * Shows the given moderation note as a highlighted range.
    *
-   * @param {Array} notes
-   *   An array of objects representing Moderation Notes.
+   * @param {Object} note
+   *   An objects representing a Moderation Note.
    */
-  function showModerationNotes (notes) {
-    for (var i in notes) {
-      var note = notes[i];
-      var $field = $('[data-moderation-notes-field-id="' + note.field_id + '"]');
-      if ($field.length) {
-        var match = doSearch(note.quote, $field[0], note.quote_offset);
-        if (match) {
-          var wrap = document.createElement('span');
-          wrap.classList = 'moderation-note-highlight';
-          wrap.dataset.moderation_note_id = i;
-          wrap.appendChild(match.extractContents());
-          match.insertNode(wrap);
-        }
+  function showModerationNote (note) {
+    var $field = $('[data-moderation-notes-field-id="' + note.field_id + '"]');
+    if ($field.length) {
+      var match = doSearch(note.quote, $field[0], note.quote_offset);
+      if (match) {
+        var wrap = document.createElement('span');
+        wrap.classList = 'moderation-note-highlight';
+        wrap.dataset.moderation_note_id = note.id;
+        wrap.appendChild(match.extractContents());
+        match.insertNode(wrap);
       }
     }
   }
@@ -257,26 +313,11 @@
       if (settings.moderation_notes) {
         var notes = settings.moderation_notes;
         delete settings.moderation_notes;
-        showModerationNotes(notes);
+        for (var i in notes) {
+          var note = notes[i];
+          showModerationNote(note);
+        }
         $('#drupal-offcanvas').dialog().dialog('close');
-      }
-
-      if (settings.moderation_note_deleted) {
-        var note_id = settings.moderation_note_deleted;
-        delete settings.moderation_note_deleted;
-        var $wrapper = $('.moderation-note-highlight[data-moderation_note_id="' + note_id + '"]');
-        $wrapper.contents().unwrap();
-        $('#drupal-offcanvas').dialog().dialog('close');
-      }
-
-      if (settings.moderation_note_edited) {
-        var note_id = settings.moderation_note_edited;
-        delete settings.moderation_note_edited;
-        var view_ajax = new Drupal.ajax({
-          url: Drupal.formatString(Drupal.url('moderation-note/!id'), {'!id': note_id}),
-          dialogType: 'dialog_offcanvas'
-        });
-        view_ajax.execute();
       }
 
       var timeout;

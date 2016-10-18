@@ -2,8 +2,11 @@
 
 namespace Drupal\moderation_notes;
 
+use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\moderation_notes\Ajax\AddModerationNoteCommand;
+use Drupal\moderation_notes\Ajax\ShowModerationNoteCommand;
 
 /**
  * Form handler for the moderation_note edit forms.
@@ -76,21 +79,18 @@ class ModerationNoteForm extends ContentEntityForm {
     /** @var \Drupal\moderation_notes\ModerationNoteInterface $note */
     $note = $this->entity;
 
+    $response = new AjaxResponse();
+
     if ($this->getOperation() === 'create') {
-      $setting = [
-        'field_id' => _moderation_notes_generate_field_id($note),
-        'text' => $note->getText(),
-        'quote' => $note->getQuote(),
-        'quote_offset' => $note->getQuoteOffset(),
-        'user' => $note->getOwner()->label(),
-      ];
-      $form['#attached']['drupalSettings']['moderation_notes'][$note->id()] = $setting;
+      $command = new AddModerationNoteCommand($note);
     }
     else {
-      $form['#attached']['drupalSettings']['moderation_note_edited'] = $note->id();
+      $command = new ShowModerationNoteCommand($note);
     }
 
-    return $form;
+    $response->addCommand($command);
+
+    return $response;
   }
 
 }
