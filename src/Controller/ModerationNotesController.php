@@ -83,7 +83,13 @@ class ModerationNotesController extends ControllerBase {
    */
   public function viewNote(ModerationNoteInterface $moderation_note) {
     $view_builder = $this->entityTypeManager()->getViewBuilder('moderation_note');
-    return $view_builder->view($moderation_note);
+    $build = $view_builder->view($moderation_note);
+    $build['#attached']['drupalSettings']['highlight_moderation_note'] = [
+      'id' => $moderation_note->id(),
+      'quote' => $moderation_note->getQuote(),
+      'quote_offset' => $moderation_note->getQuoteOffset(),
+    ];
+    return $build;
   }
 
   /**

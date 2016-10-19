@@ -33,7 +33,7 @@
    */
   Drupal.AjaxCommands.prototype.remove_moderation_note = function (ajax, response, status) {
     var id = response.id;
-    var $wrapper = $('.moderation-note-highlight[data-moderation_note_id="' + id + '"]');
+    var $wrapper = $('[data-moderation-note-id="' + id + '"]');
     $wrapper.contents().unwrap();
     $('#drupal-offcanvas').dialog().dialog('close');
   };
@@ -73,7 +73,8 @@
     var note_id = response.id;
     var view_ajax = new Drupal.ajax({
         url: Drupal.formatString(Drupal.url('moderation-note/!id'), {'!id': note_id}),
-        dialogType: 'dialog_offcanvas'
+        dialogType: 'dialog_offcanvas',
+        progress: {type: 'fullscreen'}
     });
     view_ajax.execute();
   };
@@ -143,6 +144,7 @@
       }
     }
 
+    selection.collapseToEnd();
     return match;
   }
 
@@ -178,11 +180,12 @@
     var $tooltip = $('<a class="moderation-notes-tooltip add" href="javascript:;">' + Drupal.t('Add note') + '</a>').hide();
 
     // Click callback.
-    $tooltip.off('click.moderation_notes').on('click.moderation_notes', function () {
+    $tooltip.on('click', function () {
       var field_id = Drupal.moderation_notes.selection.field_id;
       var form_ajax = new Drupal.ajax({
         url: buildUrl(field_id, Drupal.url('moderation-notes/add/!entity_type/!id/!field_name/!langcode/!view_mode')),
-        dialogType: 'dialog_offcanvas'
+        dialogType: 'dialog_offcanvas',
+        progress: {type: 'fullscreen'}
       });
       form_ajax.execute();
     });
@@ -202,11 +205,13 @@
     var $tooltip = $('<a class="moderation-notes-tooltip view" href="javascript:;">' + Drupal.t('View note') + '</a>').hide();
 
     // Click callback.
-    $tooltip.off('click.moderation_notes').on('click.moderation_notes', function () {
+    $tooltip.on('click', function () {
+      var note = $(this).data('moderation-note');
       $(this).fadeOut('fast');
       var view_ajax = new Drupal.ajax({
-        url: Drupal.formatString(Drupal.url('moderation-note/!id'), {'!id': $(this).data('moderation_note_id')}),
-        dialogType: 'dialog_offcanvas'
+        url: Drupal.formatString(Drupal.url('moderation-note/!id'), {'!id': note.id}),
+        dialogType: 'dialog_offcanvas',
+        progress: {type: 'fullscreen'}
       });
       view_ajax.execute();
     });
@@ -270,16 +275,18 @@
       if (match) {
         var wrap = document.createElement('span');
         wrap.classList = 'moderation-note-highlight';
-        wrap.dataset.moderation_note_id = note.id;
         wrap.appendChild(match.extractContents());
         match.insertNode(wrap);
 
         // Attach behaviors for the note.
         var $wrap = $(wrap);
+        $wrap.data('moderation-note', note);
+        // This allows notes to be found by their ID.
+        $wrap.attr('data-moderation-note-id', note.id);
 
         $wrap.on('mouseover', function () {
           showViewTooltip($view_tooltip, $(this));
-          $view_tooltip.data('moderation_note_id', $(this).data('moderation_note_id'));
+          $view_tooltip.data('moderation-note', $(this).data('moderation-note'));
           clearTimeout(view_tooltip_timeout);
         });
 
@@ -292,9 +299,51 @@
     }
   }
 
+  /**
+   * Highlights focused text while the sidebar is open.
+   *
+   * @param {Object} note
+   *   An objects representing a Moderation Note.
+   */
+  function showContextHighlight (note) {
+    // Remove all existing contextual highlights.
+    $('.moderation-note-contextual-highlight').each(function () {
+      if ($(this).data('moderation-note-id')) {
+        $(this).removeClass('moderation-note-contextual-highlight existing');
+      }
+      else {
+        $(this).contents().unwrap();
+      }
+    });
+
+    var $note = $('[data-moderation-note-id="' + note.id + '"]');
+    // If this note is already highlighted, simply add a class.
+    if ($note.length) {
+      $note.addClass('moderation-note-contextual-highlight existing');
+      $(document).on('dialogclose', function () {
+        $note.removeClass('moderation-note-contextual-highlight existing');
+      });
+    }
+    // Otherwise, we need to create a new highlight.
+    else {
+      var $field = $('[data-moderation-notes-field-id="' + note.field_id + '"]');
+      var match = doSearch(note.quote, $field[0], note.quote_offset);
+      if (match) {
+        var wrap = document.createElement('span');
+        wrap.classList = 'moderation-note-contextual-highlight new';
+        wrap.appendChild(match.extractContents());
+        match.insertNode(wrap);
+
+        $(document).on('dialogclose', function () {
+          $(wrap).contents().unwrap();
+        });
+      }
+    }
+  }
+
   // We use timeouts to throttle calls to this event.
   var timeout;
-  document.addEventListener('selectionchange', function () {
+  $(document).on('selectionchange', function () {
     clearTimeout(timeout);
     $add_tooltip.fadeOut('fast');
 
@@ -332,8 +381,18 @@
     attach: function (context, settings) {
       var $new_form = $('[data-moderation-notes-new-form]', context);
       if ($new_form.length) {
-        $new_form.find('input[name="quote"]').val(Drupal.moderation_notes.selection.quote);
-        $new_form.find('input[name="quote_offset"]').val(Drupal.moderation_notes.selection.quote_offset);
+        var selection = Drupal.moderation_notes.selection;
+        $new_form.find('input[name="quote"]').val(selection.quote);
+        $new_form.find('input[name="quote_offset"]').val(selection.quote_offset);
+        showContextHighlight(selection);
+      }
+
+      // Allow forms to highlight contextual notes while open.
+      // We can't do this in a AJAX command as (afaik), you can't return an
+      // arbitrary AJAX command with a normal render array.
+      if (settings.highlight_moderation_note) {
+        showContextHighlight(settings.highlight_moderation_note);
+        delete settings.highlight_moderation_note;
       }
 
       // On page load, display all note given to us.

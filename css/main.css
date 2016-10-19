@@ -38,6 +38,11 @@
 
 .moderation-note-highlight {
   background: yellow;
+  transition: background .5s ease;
+}
+
+.moderation-note-contextual-highlight {
+  background: #b7d2ff;
 }
 
 .moderation-note {

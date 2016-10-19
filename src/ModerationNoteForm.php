@@ -48,6 +48,14 @@ class ModerationNoteForm extends ContentEntityForm {
       '#default_value' => $moderation_note->getText(),
     ];
 
+    if ($this->getOperation() !== 'create') {
+      $form['#attached']['drupalSettings']['highlight_moderation_note'] = [
+        'id' => $moderation_note->id(),
+        'quote' => $moderation_note->getQuote(),
+        'quote_offset' => $moderation_note->getQuoteOffset(),
+      ];
+    }
+
     return $form;
   }
 

@@ -43,6 +43,15 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
     $form['#prefix'] = '<div id="moderation-note-form-wrapper">';
     $form['#suffix'] = '</div>';
 
+    /** @var \Drupal\moderation_notes\Entity\ModerationNote $moderation_note */
+    $moderation_note = $this->entity;
+
+    $form['#attached']['drupalSettings']['highlight_moderation_note'] = [
+      'id' => $moderation_note->id(),
+      'quote' => $moderation_note->getQuote(),
+      'quote_offset' => $moderation_note->getQuoteOffset(),
+    ];
+
     return $form;
   }
 
