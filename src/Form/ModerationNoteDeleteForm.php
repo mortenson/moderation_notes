@@ -78,6 +78,10 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
+    // Clear the Drupal messages, as this form uses AJAX to display its
+    // results. Displaying a deletion message on the next page the user visits
+    // is awkward.
+    drupal_get_messages();
     $response = new AjaxResponse();
     $command = new RemoveModerationNoteCommand($this->getEntity());
     $response->addCommand($command);
