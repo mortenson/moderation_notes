@@ -24,12 +24,19 @@ class ModerationNoteForm extends ContentEntityForm {
     $form['#prefix'] = '<div id="moderation-note-form-wrapper">';
     $form['#suffix'] = '</div>';
 
+    $form['text'] = [
+      '#type' => 'textarea',
+      '#required' => TRUE,
+      '#default_value' => $moderation_note->getText(),
+    ];
+
     $form['quote'] = [
-      '#type' => 'textfield',
+      '#type' => 'textarea',
       '#required' => TRUE,
       '#attributes' => [
-        'class' => ['visually-hidden'],
+        'class' => ['visually-hidden', 'field-moderation-note-quote'],
       ],
+      '#resizable' => 'none',
       '#default_value' => $moderation_note->getQuote(),
     ];
 
@@ -37,15 +44,9 @@ class ModerationNoteForm extends ContentEntityForm {
       '#type' => 'textfield',
       '#required' => TRUE,
       '#attributes' => [
-        'class' => ['visually-hidden'],
+        'class' => ['visually-hidden', 'field-moderation-note-quote-offset'],
       ],
       '#default_value' => $moderation_note->getQuoteOffset(),
-    ];
-
-    $form['text'] = [
-      '#type' => 'textarea',
-      '#required' => TRUE,
-      '#default_value' => $moderation_note->getText(),
     ];
 
     if ($this->getOperation() !== 'create') {

@@ -15,9 +15,19 @@
     }
   };
 
+  // Local variables.
   var $add_tooltip = initializeAddTooltip();
   var $view_tooltip = initializeViewTooltip();
   var view_tooltip_timeout;
+  var mousedown_pos = [];
+  var mouseup_pos = [];
+
+  // This whole nonsense about keeping track of the mouse position is only
+  // necessary to properly display a tooltip in the center of a Range.
+  // Range.getBoundingClientRect().left is fine within a container, but as soon
+  // as you start selecting complex elements it stops being accurate.
+  $(document).mousedown(function(e) { mousedown_pos = [e.pageX, e.pageY]; });
+  $(document).mouseup(function(e) { mouseup_pos = [e.pageX, e.pageY]; });
 
   /**
    * Command to remove a Moderation Note.
@@ -117,6 +127,7 @@
    *   The status of the search. Use window.getSelection() to access the Range.
    */
   function doSearch (text, element, offset) {
+    var scroll = $(window).scrollTop();
     element = element || document.body;
     offset = offset || 0;
     var match = false;
@@ -145,6 +156,7 @@
     }
 
     selection.collapseToEnd();
+    $(window).scrollTop(scroll);
     return match;
   }
 
@@ -238,11 +250,12 @@
    *   The tooltip.
    */
   function showAddTooltip ($tooltip) {
-    var range = window.getSelection().getRangeAt(0);
-    var rect = range.getBoundingClientRect();
-    var width_offset = (rect.width / 2) - ($tooltip.outerWidth() / 2);
-    $tooltip.css('left', rect.left + document.body.scrollLeft + width_offset);
-    $tooltip.css('top', rect.top + document.body.scrollTop - ($tooltip.outerHeight() + 5));
+    var selection = window.getSelection();
+    var range = selection.getRangeAt(0);
+    var top = range.getBoundingClientRect().top - ($tooltip.outerHeight() + 5);
+    var left = mousedown_pos[0] + ((mouseup_pos[0] - mousedown_pos[0]) / 2) - ($tooltip.outerWidth() / 2);
+    $tooltip.css('left', left + document.body.scrollLeft);
+    $tooltip.css('top', top + document.body.scrollTop);
     $tooltip.fadeIn('fast');
   }
 
@@ -269,17 +282,16 @@
    *   An objects representing a Moderation Note.
    */
   function showModerationNote (note) {
+    // Remove all existing context highlights.
+    removeContextHighlights();
+
     var $field = $('[data-moderation-notes-field-id="' + note.field_id + '"]');
     if ($field.length) {
       var match = doSearch(note.quote, $field[0], note.quote_offset);
       if (match) {
-        var wrap = document.createElement('span');
-        wrap.classList = 'moderation-note-highlight';
-        wrap.appendChild(match.extractContents());
-        match.insertNode(wrap);
+        var $wrap = highliteRange(match, 'moderation-note-highlight');
 
         // Attach behaviors for the note.
-        var $wrap = $(wrap);
         $wrap.data('moderation-note', note);
         // This allows notes to be found by their ID.
         $wrap.attr('data-moderation-note-id', note.id);
@@ -306,7 +318,30 @@
    *   An objects representing a Moderation Note.
    */
   function showContextHighlight (note) {
-    // Remove all existing contextual highlights.
+    // Remove all existing context highlights.
+    removeContextHighlights();
+
+    // If this note is already highlighted, simply add a class.
+    if (note.id) {
+      var $note = $('[data-moderation-note-id="' + note.id + '"]');
+      if ($note.length) {
+        $note.addClass('moderation-note-contextual-highlight existing');
+      }
+    }
+    // Otherwise, we need to create a new highlight.
+    else {
+      var $field = $('[data-moderation-notes-field-id="' + note.field_id + '"]');
+      var match = doSearch(note.quote, $field[0], note.quote_offset);
+      if (match) {
+        highliteRange(match, 'moderation-note-contextual-highlight new');
+      }
+    }
+  }
+
+  /**
+   * Removes all contextual highlights from the page.
+   */
+  function removeContextHighlights () {
     $('.moderation-note-contextual-highlight').each(function () {
       if ($(this).data('moderation-note-id')) {
         $(this).removeClass('moderation-note-contextual-highlight existing');
@@ -315,35 +350,41 @@
         $(this).contents().unwrap();
       }
     });
+  }
 
-    var $note = $('[data-moderation-note-id="' + note.id + '"]');
-    // If this note is already highlighted, simply add a class.
-    if ($note.length) {
-      $note.addClass('moderation-note-contextual-highlight existing');
-      $(document).on('dialogclose', function () {
-        $note.removeClass('moderation-note-contextual-highlight existing');
-      });
-    }
-    // Otherwise, we need to create a new highlight.
-    else {
-      var $field = $('[data-moderation-notes-field-id="' + note.field_id + '"]');
-      var match = doSearch(note.quote, $field[0], note.quote_offset);
-      if (match) {
-        var wrap = document.createElement('span');
-        wrap.classList = 'moderation-note-contextual-highlight new';
-        wrap.appendChild(match.extractContents());
-        match.insertNode(wrap);
+  /**
+   * Wraps a given range in a <span> tag with the provided classes.
+   *
+   * @param {Range} range
+   *   The given range.
+   * @param {String} classes
+   *   Classes you want to add to the highlight, separated by a space.
+   * @returns {Object}
+   *   The jQuery object for the wrap (could contain multiple elements).
+   */
+  function highliteRange (range, classes) {
+    var selection = window.getSelection();
 
-        $(document).on('dialogclose', function () {
-          $(wrap).contents().unwrap();
-        });
-      }
-    }
+    selection.removeAllRanges();
+    selection.addRange(range);
+    document.designMode = 'on';
+    var spellcheck = document.body.spellcheck;
+    document.body.spellcheck = false;
+    document.execCommand('hilitecolor', false, 'yellow');
+    document.designMode = 'off';
+    document.body.spellcheck = spellcheck;
+
+    var wrap_range = selection.getRangeAt(0);
+    var $wrap = $(wrap_range.startContainer.parentNode).add(wrap_range.endContainer.parentNode);
+    $wrap.removeAttr('style').addClass(classes);
+    selection.collapseToEnd();
+
+    return $wrap;
   }
 
   // We use timeouts to throttle calls to this event.
   var timeout;
-  $(document).on('selectionchange', function () {
+  $(document).on('selectionchange', function (e) {
     clearTimeout(timeout);
     $add_tooltip.fadeOut('fast');
 
@@ -372,6 +413,10 @@
     }, 500);
   });
 
+  $(document).on('dialogclose', function () {
+    removeContextHighlights();
+  });
+
   /**
    * Contains all Moderation Notes behaviors.
    *
@@ -382,8 +427,8 @@
       var $new_form = $('[data-moderation-notes-new-form]', context);
       if ($new_form.length) {
         var selection = Drupal.moderation_notes.selection;
-        $new_form.find('input[name="quote"]').val(selection.quote);
-        $new_form.find('input[name="quote_offset"]').val(selection.quote_offset);
+        $new_form.find('.field-moderation-note-quote').val(selection.quote);
+        $new_form.find('.field-moderation-note-quote-offset').val(selection.quote_offset);
         showContextHighlight(selection);
       }
 
