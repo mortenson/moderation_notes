@@ -61,8 +61,9 @@
   text-align: right;
 }
 
-.moderation-note .moderation-note-actions {
+.moderation-note .moderation-note-actions, .ui-dialog .ui-dialog-content .moderation-note-form .form-actions {
   background: #4787b9;
+  padding-top: 0;
   text-align: right;
   margin-left: -10px;
   margin-bottom: -10px;
@@ -74,11 +75,16 @@
   margin-left: 15px;
 }
 
-.ui-dialog-offcanvas .moderation-note-actions a {
+.ui-dialog-offcanvas .moderation-note-actions a, .moderation-note-form input[type="submit"] {
+  background: #4787b9;
+  color: #85bef4;
+  font-size: 13px;
+  margin: 0;
   display: inline-block;
   padding: 10px;
-  font-size: 13px;
-  background: transparent;
+  width: initial;
+  border-radius: 0;
+  border: 0;
   transition: .2s ease;
 }
 
@@ -89,10 +95,5 @@
 
 .ui-dialog-offcanvas .moderation-note-form .form-item {
   margin-top: 0;
-  margin-bottom: 0;
-}
-
-.moderation-note-form input[type="submit"] {
-  background: #4787b9;
   margin-bottom: 0;
 }

@@ -3,6 +3,7 @@
 namespace Drupal\moderation_notes;
 
 use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
@@ -85,7 +86,39 @@ class ModerationNoteForm extends ContentEntityForm {
       ],
     );
 
+    if ($this->getOperation() !== 'reply') {
+      $actions['cancel'] = array(
+        '#type' => 'submit',
+        '#value' => $this->t('Cancel'),
+        '#executes_submit_callback' => FALSE,
+        '#ajax' => [
+          'callback' => '::cancelForm',
+          'method' => 'replace',
+          'disable-refocus' => TRUE,
+        ],
+      );
+    }
+
     return $actions;
+  }
+
+  public function cancelForm(array &$form, FormStateInterface $form_state) {
+    $response = new AjaxResponse();
+
+    if ($this->getOperation() === 'create') {
+      $command = new CloseDialogCommand('#drupal-offcanvas');
+    }
+    else {
+      /** @var \Drupal\moderation_notes\ModerationNoteInterface $note */
+      $note = $this->entity;
+      $selector = '[data-moderation-note-form-id="' . $note->id() . '"]';
+      $content = $this->entityTypeManager->getViewBuilder('moderation_note')->view($note);
+      $command = new ReplaceCommand($selector, $content);
+    }
+
+    $response->addCommand($command);
+
+    return $response;
   }
 
   /**
