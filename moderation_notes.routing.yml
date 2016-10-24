@@ -2,7 +2,7 @@ moderation_notes.new:
   path: '/moderation-notes/add/{entity_type}/{entity}/{field_name}/{langcode}/{view_mode_id}'
   defaults:
     _controller: '\Drupal\moderation_notes\Controller\ModerationNotesController::createNote'
-    _title: 'Add moderation note'
+    _title: 'Add note'
   requirements:
     _permission: 'create moderation notes'
   options:
@@ -14,7 +14,7 @@ moderation_notes.edit:
   path: '/moderation-note/{moderation_note}/edit'
   defaults:
     _controller: '\Drupal\moderation_notes\Controller\ModerationNotesController::editNote'
-    _title: 'Edit moderation note'
+    _title: 'Edit note'
   requirements:
     _entity_access: 'moderation_note.update'
 
@@ -22,14 +22,23 @@ moderation_notes.delete:
   path: '/moderation-note/{moderation_note}/delete'
   defaults:
     _controller: '\Drupal\moderation_notes\Controller\ModerationNotesController::deleteNote'
-    _title: 'Delete moderation note'
+    _title: 'Delete note'
   requirements:
     _entity_access: 'moderation_note.delete'
+
+moderation_notes.reply:
+  path: '/moderation-note/{moderation_note}/reply'
+  defaults:
+    _controller: '\Drupal\moderation_notes\Controller\ModerationNotesController::replyToNote'
+    _title: 'Reply to note'
+  requirements:
+    _entity_access: 'moderation_note.view'
+    _permission: 'create moderation notes'
 
 moderation_notes.view:
   path: '/moderation-note/{moderation_note}'
   defaults:
     _controller: '\Drupal\moderation_notes\Controller\ModerationNotesController::viewNote'
-    _title: 'View moderation note'
+    _title: 'View note'
   requirements:
     _entity_access: 'moderation_note.view'

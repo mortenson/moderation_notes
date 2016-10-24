@@ -3,6 +3,7 @@
 namespace Drupal\moderation_notes\Form;
 
 use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\RemoveCommand;
 use Drupal\Core\Entity\ContentEntityDeleteForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\moderation_notes\Ajax\RemoveModerationNoteCommand;
@@ -39,17 +40,17 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
 
+    /** @var \Drupal\moderation_notes\Entity\ModerationNote $note */
+    $note = $this->entity;
+
     // Wrap our form so that our submit callback can re-render the form.
-    $form['#prefix'] = '<div id="moderation-note-form-wrapper">';
+    $form['#prefix'] = '<div class="moderation-note-form-wrapper" data-moderation-note-form-id="' . $note->id() . '">';
     $form['#suffix'] = '</div>';
 
-    /** @var \Drupal\moderation_notes\Entity\ModerationNote $moderation_note */
-    $moderation_note = $this->entity;
-
     $form['#attached']['drupalSettings']['highlight_moderation_note'] = [
-      'id' => $moderation_note->id(),
-      'quote' => $moderation_note->getQuote(),
-      'quote_offset' => $moderation_note->getQuoteOffset(),
+      'id' => $note->id(),
+      'quote' => $note->getQuote(),
+      'quote_offset' => $note->getQuoteOffset(),
     ];
 
     return $form;
@@ -78,12 +79,21 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
+
+    /** @var \Drupal\moderation_notes\Entity\ModerationNote $note */
+    $note = $this->entity;
+
     // Clear the Drupal messages, as this form uses AJAX to display its
     // results. Displaying a deletion message on the next page the user visits
     // is awkward.
     drupal_get_messages();
     $response = new AjaxResponse();
-    $command = new RemoveModerationNoteCommand($this->getEntity());
+    if (!$note->getParent()) {
+      $command = new RemoveModerationNoteCommand($note);
+    }
+    else {
+      $command = new RemoveCommand('[data-moderation-note-form-id="' . $note->id() . '"]');
+    }
     $response->addCommand($command);
     return $response;
   }

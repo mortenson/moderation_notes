@@ -23,6 +23,7 @@ use Drupal\user\UserInterface;
  *     "form" = {
  *       "create" = "Drupal\moderation_notes\ModerationNoteForm",
  *       "edit" = "Drupal\moderation_notes\ModerationNoteForm",
+ *       "reply" = "Drupal\moderation_notes\ModerationNoteForm",
  *       "delete" = "Drupal\moderation_notes\Form\ModerationNoteDeleteForm"
  *     }
  *   },

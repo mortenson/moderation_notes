@@ -3,10 +3,16 @@
 namespace Drupal\moderation_notes;
 
 use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\ContentEntityForm;
+use Drupal\Core\Entity\EntityFormBuilderInterface;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\moderation_notes\Ajax\AddModerationNoteCommand;
+use Drupal\moderation_notes\Ajax\ReplyModerationNoteCommand;
 use Drupal\moderation_notes\Ajax\ShowModerationNoteCommand;
+use Drupal\moderation_notes\Entity\ModerationNote;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form handler for the moderation_note edit forms.
@@ -16,45 +22,50 @@ class ModerationNoteForm extends ContentEntityForm {
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, FormStateInterface $form_state) {
-    /** @var \Drupal\moderation_notes\Entity\ModerationNote $moderation_note */
-    $moderation_note = $this->entity;
+  public function buildForm(array $form, FormStateInterface $form_state) {
+    $form = parent::buildForm($form, $form_state);
+
+    /** @var \Drupal\moderation_notes\Entity\ModerationNote $note */
+    $note = $this->entity;
 
     // Wrap our form so that our submit callback can re-render the form.
-    $form['#prefix'] = '<div id="moderation-note-form-wrapper">';
+    $form_id = $this->getOperation() === 'edit' ? $note->id() : $this->getOperation();
+    $form['#prefix'] = '<div class="moderation-note-form-wrapper" data-moderation-note-form-id="' . $form_id . '">';
     $form['#suffix'] = '</div>';
 
     $form['text'] = [
       '#type' => 'textarea',
       '#required' => TRUE,
-      '#default_value' => $moderation_note->getText(),
+      '#default_value' => $note->getText(),
     ];
 
     $form['quote'] = [
       '#type' => 'textarea',
-      '#required' => TRUE,
       '#attributes' => [
         'class' => ['visually-hidden', 'field-moderation-note-quote'],
       ],
       '#resizable' => 'none',
-      '#default_value' => $moderation_note->getQuote(),
+      '#default_value' => $note->getQuote(),
     ];
 
     $form['quote_offset'] = [
       '#type' => 'textfield',
-      '#required' => TRUE,
       '#attributes' => [
         'class' => ['visually-hidden', 'field-moderation-note-quote-offset'],
       ],
-      '#default_value' => $moderation_note->getQuoteOffset(),
+      '#default_value' => $note->getQuoteOffset(),
     ];
 
-    if ($this->getOperation() !== 'create') {
+    if ($this->getOperation() === 'edit') {
       $form['#attached']['drupalSettings']['highlight_moderation_note'] = [
-        'id' => $moderation_note->id(),
-        'quote' => $moderation_note->getQuote(),
-        'quote_offset' => $moderation_note->getQuoteOffset(),
+        'id' => $note->id(),
+        'quote' => $note->getQuote(),
+        'quote_offset' => $note->getQuoteOffset(),
       ];
+    }
+
+    if ($this->getOperation() === 'reply' || $this->entity->hasParent()) {
+      $form['#attributes']['class'][] = 'moderation-note-form-reply';
     }
 
     return $form;
@@ -66,10 +77,9 @@ class ModerationNoteForm extends ContentEntityForm {
   protected function actions(array $form, FormStateInterface $form_state) {
     $actions['submit'] = array(
       '#type' => 'submit',
-      '#value' => $this->t('Save'),
+      '#value' => $this->getOperation() === 'reply' ? $this->t('Reply') : $this->t('Save'),
       '#ajax' => [
         'callback' => '::submitForm',
-        'wrapper' => 'moderation-note-form-wrapper',
         'method' => 'replace',
         'disable-refocus' => TRUE,
       ],
@@ -94,10 +104,18 @@ class ModerationNoteForm extends ContentEntityForm {
       $command = new AddModerationNoteCommand($note);
     }
     else {
-      $command = new ShowModerationNoteCommand($note);
+      $form_id = $this->getOperation() === 'edit' ? $note->id() : $this->getOperation();
+      $selector = '[data-moderation-note-form-id="' . $form_id . '"]';
+      $content = $this->entityTypeManager->getViewBuilder('moderation_note')->view($note);
+      $command = new ReplaceCommand($selector, $content);
     }
 
     $response->addCommand($command);
+
+    if ($this->getOperation() === 'reply') {
+      $command = new ReplyModerationNoteCommand($note->getParent());
+      $response->addCommand($command);
+    }
 
     return $response;
   }

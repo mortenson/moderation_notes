@@ -3,6 +3,7 @@
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
 use Drupal\moderation_notes\ModerationNoteInterface;
+use Drupal\moderation_notes\Entity\ModerationNote;
 
 /**
  * Implements hook_entity_view_alter().
@@ -18,6 +19,7 @@ function moderation_notes_entity_view_alter(&$build, EntityInterface $entity, \D
     ->condition('entity_id', $entity->id())
     ->condition('entity_langcode', $entity->language()->getId())
     ->condition('entity_view_mode_id', $display->getOriginalMode())
+    ->notExists('parent')
     ->execute();
 
   /** @var \Drupal\moderation_notes\ModerationNoteInterface[] $notes */
@@ -121,7 +123,13 @@ function template_preprocess_moderation_note(&$variables) {
   $variables['author_link'] = $owner->toLink()->toRenderable();
   $variables['author_username'] = $owner->label();
   $variables['author_picture'] = user_view($owner, 'compact');
+
+  // Attributes.
   $variables['attributes']['class'][] = 'moderation-note';
+  $variables['attributes']['data-moderation-note-id'] = $note->id();
+  if ($note->getParent()) {
+    $variables['attributes']['class'][] = 'moderation-note-reply';
+  }
 
   // We show note actions inline with the note, if the user has access.
   $params = ['moderation_note' => $note->id()];
@@ -133,8 +141,6 @@ function template_preprocess_moderation_note(&$variables) {
       '#url' => $url,
       '#attributes' => [
         'class' => ['use-ajax'],
-        'data-dialog-type' => 'dialog',
-        'data-dialog-renderer' => 'offcanvas',
       ],
     ];
   }
@@ -151,7 +157,6 @@ function template_preprocess_moderation_note(&$variables) {
       ],
     ];
   }
-  //$variables['reply_access'] = $note->access('create');
 }
 
 function _moderation_notes_pretty_time($time) {

@@ -27,7 +27,7 @@
   // Range.getBoundingClientRect().left is fine within a container, but as soon
   // as you start selecting complex elements it stops being accurate.
   $(document).mousedown(function(e) { mousedown_pos = [e.pageX, e.pageY]; });
-  $(document).mouseup(function(e) { mouseup_pos = [e.pageX, e.pageY]; });
+  $(document).mousemove(function(e) { mouseup_pos = [e.pageX, e.pageY]; });
 
   /**
    * Command to remove a Moderation Note.
@@ -43,7 +43,7 @@
    */
   Drupal.AjaxCommands.prototype.remove_moderation_note = function (ajax, response, status) {
     var id = response.id;
-    var $wrapper = $('[data-moderation-note-id="' + id + '"]');
+    var $wrapper = $('[data-moderation-note-highlight-id="' + id + '"]');
     $wrapper.contents().unwrap();
     $('#drupal-offcanvas').dialog().dialog('close');
   };
@@ -67,26 +67,24 @@
   };
 
   /**
-   * Command to show a Moderation Note in the sidebar.
+   * Makes another AJAX call after the reply form is submitted to re-load it.
    *
    * @param {Drupal.Ajax} [ajax]
    *   The ajax object.
    * @param {Object} response
    *   Object holding the server response.
-   * @param {Number} response.id
+   * @param {String} response.id
    *   The ID for the moderation note.
    * @param {Number} [status]
    *   The HTTP status code.
    */
-  Drupal.AjaxCommands.prototype.show_moderation_note = function (ajax, response, status) {
-    $('#drupal-offcanvas').fadeOut('fast');
-    var note_id = response.id;
-    var view_ajax = new Drupal.ajax({
-        url: Drupal.formatString(Drupal.url('moderation-note/!id'), {'!id': note_id}),
-        dialogType: 'dialog_offcanvas',
-        progress: {type: 'fullscreen'}
+  Drupal.AjaxCommands.prototype.reply_moderation_note = function (ajax, response, status) {
+    var reply_ajax = new Drupal.ajax({
+      url: Drupal.formatString(Drupal.url('moderation-note/!id/reply'), {'!id': response.id}),
+      dialogType: 'dialog_offcanvas',
+      progress: {type: 'fullscreen'}
     });
-    view_ajax.execute();
+    reply_ajax.execute();
   };
 
   /**
@@ -189,17 +187,17 @@
    *   The tooltip.
    */
   function initializeAddTooltip () {
-    var $tooltip = $('<a class="moderation-notes-tooltip add" href="javascript:;">' + Drupal.t('Add note') + '</a>').hide();
+    var $tooltip = $('<a class="moderation-notes-tooltip" href="javascript;">' + Drupal.t('Add note') + '</a>').hide();
 
     // Click callback.
-    $tooltip.on('click', function () {
-      var field_id = Drupal.moderation_notes.selection.field_id;
+    $tooltip.on('click', function (e) {
       var form_ajax = new Drupal.ajax({
-        url: buildUrl(field_id, Drupal.url('moderation-notes/add/!entity_type/!id/!field_name/!langcode/!view_mode')),
+        url: $tooltip.attr('href'),
         dialogType: 'dialog_offcanvas',
         progress: {type: 'fullscreen'}
       });
       form_ajax.execute();
+      e.preventDefault();
     });
 
     $('body').append($tooltip);
@@ -214,29 +212,30 @@
    *   The tooltip.
    */
   function initializeViewTooltip () {
-    var $tooltip = $('<a class="moderation-notes-tooltip view" href="javascript:;">' + Drupal.t('View note') + '</a>').hide();
+    var $tooltip = $('<a class="moderation-notes-tooltip">' + Drupal.t('View note') + '</a>').hide();
+
+    $('body').append($tooltip);
 
     // Click callback.
-    $tooltip.on('click', function () {
-      var note = $(this).data('moderation-note');
-      $(this).fadeOut('fast');
+    $tooltip.on('click', function (e) {
       var view_ajax = new Drupal.ajax({
-        url: Drupal.formatString(Drupal.url('moderation-note/!id'), {'!id': note.id}),
+        url: $tooltip.attr('href'),
         dialogType: 'dialog_offcanvas',
         progress: {type: 'fullscreen'}
       });
       view_ajax.execute();
+      e.preventDefault();
     });
 
-    $('body').append($tooltip);
-
     $tooltip.on('mouseleave', function () {
+      clearTimeout(view_tooltip_timeout);
       view_tooltip_timeout = setTimeout(function () {
         $tooltip.fadeOut('fast');
       }, 500);
     });
 
-    $tooltip.on('mouseover', function () {
+    $tooltip.on('mousemove', function () {
+      $tooltip.stop().fadeIn();
       clearTimeout(view_tooltip_timeout);
     });
 
@@ -248,14 +247,20 @@
    *
    * @param {Object} $tooltip
    *   The tooltip.
+   * @param {String} field_id
+   *   The field ID.
    */
-  function showAddTooltip ($tooltip) {
+  function showAddTooltip ($tooltip, field_id) {
     var selection = window.getSelection();
     var range = selection.getRangeAt(0);
     var top = range.getBoundingClientRect().top - ($tooltip.outerHeight() + 5);
     var left = mousedown_pos[0] + ((mouseup_pos[0] - mousedown_pos[0]) / 2) - ($tooltip.outerWidth() / 2);
     $tooltip.css('left', left + document.body.scrollLeft);
     $tooltip.css('top', top + document.body.scrollTop);
+
+    var url = buildUrl(field_id, Drupal.url('moderation-notes/add/!entity_type/!id/!field_name/!langcode/!view_mode'));
+    $tooltip.attr('href', url);
+
     $tooltip.fadeIn('fast');
   }
 
@@ -272,6 +277,11 @@
     var offset = $element.offset();
     $tooltip.css('left', offset.left + width_offset);
     $tooltip.css('top', offset.top - ($tooltip.outerHeight() + 5));
+
+    var id = $element.data('moderation-note-highlight-id');
+    var url = Drupal.formatString(Drupal.url('moderation-note/!id'), {'!id': id});
+    $tooltip.attr('href', url);
+
     $tooltip.fadeIn('fast');
   }
 
@@ -291,18 +301,17 @@
       if (match) {
         var $wrap = highliteRange(match, 'moderation-note-highlight');
 
-        // Attach behaviors for the note.
-        $wrap.data('moderation-note', note);
         // This allows notes to be found by their ID.
-        $wrap.attr('data-moderation-note-id', note.id);
+        $wrap.attr('data-moderation-note-highlight-id', note.id);
 
         $wrap.on('mouseover', function () {
           showViewTooltip($view_tooltip, $(this));
-          $view_tooltip.data('moderation-note', $(this).data('moderation-note'));
+          $view_tooltip.stop().fadeIn();
           clearTimeout(view_tooltip_timeout);
         });
 
         $wrap.on('mouseleave', function () {
+          clearTimeout(view_tooltip_timeout);
           view_tooltip_timeout = setTimeout(function () {
             $view_tooltip.fadeOut('fast');
           }, 500);
@@ -323,7 +332,7 @@
 
     // If this note is already highlighted, simply add a class.
     if (note.id) {
-      var $note = $('[data-moderation-note-id="' + note.id + '"]');
+      var $note = $('[data-moderation-note-highlight-id="' + note.id + '"]');
       if ($note.length) {
         $note.addClass('moderation-note-contextual-highlight existing');
       }
@@ -343,7 +352,7 @@
    */
   function removeContextHighlights () {
     $('.moderation-note-contextual-highlight').each(function () {
-      if ($(this).data('moderation-note-id')) {
+      if ($(this).data('moderation-note-highlight-id')) {
         $(this).removeClass('moderation-note-contextual-highlight existing');
       }
       else {
@@ -399,14 +408,13 @@
           var $field = $ancestor.closest('[data-moderation-notes-field-id]');
           if ($field.length) {
             // Show the tooltip.
-            showAddTooltip($add_tooltip);
+            showAddTooltip($add_tooltip, $field.data('moderation-notes-field-id'));
 
             // Store the current selection so that it can be added to the form
             // later.
             var offset = getCursorPositionInTextOf($field[0], range);
             Drupal.moderation_notes.selection.quote = text;
             Drupal.moderation_notes.selection.quote_offset = offset;
-            Drupal.moderation_notes.selection.field_id = $field.data('moderation-notes-field-id');
           }
         }
       }

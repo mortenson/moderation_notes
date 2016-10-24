@@ -45,7 +45,7 @@
   background: #b7d2ff;
 }
 
-.moderation-note {
+.moderation-note, .moderation-note-form {
   background: #2d6c9e;
   padding: 10px;
   margin-top: 10px;
@@ -70,6 +70,10 @@
   width: calc(100% + 20px);
 }
 
+.moderation-note-reply, .moderation-note-form-reply {
+  margin-left: 15px;
+}
+
 .ui-dialog-offcanvas .moderation-note-actions a {
   display: inline-block;
   padding: 10px;
@@ -78,7 +82,17 @@
   transition: .2s ease;
 }
 
-.ui-dialog-offcanvas .moderation-note-actions a:hover {
+.ui-dialog-offcanvas .moderation-note-actions a:hover, .moderation-note-form input[type="submit"]:hover {
   background: #376189;
   color: white;
+}
+
+.ui-dialog-offcanvas .moderation-note-form .form-item {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.moderation-note-form input[type="submit"] {
+  background: #4787b9;
+  margin-bottom: 0;
 }
