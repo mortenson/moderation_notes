@@ -90,12 +90,9 @@ class ModerationNotesController extends ControllerBase {
     $view_builder = $this->entityTypeManager()->getViewBuilder('moderation_note');
     $build = [
       '#type' => 'container',
-      '#attributes' => [
-        'class' => [
-          'moderation-note-sidebar-wrapper',
-        ],
-      ],
+      '#attributes' => ['class' => ['moderation-note-sidebar-wrapper']],
     ];
+
     $build[] = $view_builder->view($moderation_note);
 
     // Delete moderation notes that were replies to this note.
@@ -107,9 +104,13 @@ class ModerationNotesController extends ControllerBase {
     if ($moderation_note->access('create')) {
       $new_note = ModerationNote::create([
         'parent' => $moderation_note,
+        'entity_type' => $moderation_note->getModeratedEntityTypeId(),
+        'entity_id' => $moderation_note->getModeratedEntityId(),
       ]);
       $build[] = $this->entityFormBuilder()->getForm($new_note, 'reply');
     }
+
+    $build['#attached']['library'][] = 'moderation_notes/main';
 
     $build['#attached']['drupalSettings']['highlight_moderation_note'] = [
       'id' => $moderation_note->id(),
@@ -169,6 +170,8 @@ class ModerationNotesController extends ControllerBase {
     $response = new AjaxResponse();
     $new_note = ModerationNote::create([
       'parent' => $moderation_note,
+      'entity_type' => $moderation_note->getModeratedEntityTypeId(),
+      'entity_id' => $moderation_note->getModeratedEntityId(),
     ]);
     $content = $this->entityFormBuilder()->getForm($new_note, 'reply');
     $command = new AppendCommand('.moderation-note-sidebar-wrapper', $content);

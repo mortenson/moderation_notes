@@ -4,6 +4,7 @@ namespace Drupal\moderation_notes\Form;
 
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
+use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Ajax\RemoveCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\ContentEntityDeleteForm;
@@ -115,11 +116,18 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
     // results. Displaying a deletion message on the next page the user visits
     // is awkward.
     drupal_get_messages();
+
     $response = new AjaxResponse();
     if (!$note->getParent()) {
       $command = new RemoveModerationNoteCommand($note);
       $response->addCommand($command);
       $command = new CloseDialogCommand('#drupal-offcanvas');
+      $response->addCommand($command);
+      // This message will only be visible if the note is displayed outside of
+      // the modal context.
+      $message = '<p>The moderation note and its replies have been deleted. To view the notated content, <a href="@url">click here</a>.</p>';
+      $args = ['@url' => $note->getModeratedEntity()->toUrl()->toString()];
+      $command = new ReplaceCommand('.moderation-note-sidebar-wrapper', $this->t($message, $args));
     }
     else {
       $command = new RemoveCommand('[data-moderation-note-form-id="' . $note->id() . '"]');

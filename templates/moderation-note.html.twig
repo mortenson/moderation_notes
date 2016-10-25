@@ -1,4 +1,10 @@
 <div {{ attributes }}>
+    {% if not parent %}
+        <div class="moderation-note-quote-information">
+            <blockquote>{{ quote }}</blockquote>
+            <p>From "{{ moderated_entity_link }}"</p>
+        </div>
+    {% endif %}
     <div class="moderation-note-text">
         {{ text }}
     </div>

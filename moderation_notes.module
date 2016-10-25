@@ -111,7 +111,6 @@ function template_preprocess_moderation_note(&$variables) {
   $note = $variables['moderation_note'];
   $variables['text'] = $note->getText();
   $variables['quote'] = $note->getQuote();
-  $variables['field_name'] = $note->getEntityFieldName();
   $variables['created'] = $note->getCreatedTime();
   $variables['created_pretty'] = _moderation_notes_pretty_time($note->getCreatedTime());
   $variables['updated'] = $note->getChangedTime();
@@ -121,6 +120,8 @@ function template_preprocess_moderation_note(&$variables) {
   $variables['author_link'] = $owner->toLink()->toRenderable();
   $variables['author_username'] = $owner->label();
   $variables['author_picture'] = user_view($owner, 'compact');
+  $variables['parent'] = $note->getParent();
+  $variables['moderated_entity_link'] = $note->getModeratedEntity()->toLink();
 
   // Attributes.
   $variables['attributes']['class'][] = 'moderation-note';

@@ -51,6 +51,8 @@
 
 .moderation-note, .moderation-note-form {
   background: #2d6c9e;
+  color: white;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   padding: 10px;
   margin-top: 10px;
 }
@@ -65,7 +67,39 @@
   text-align: right;
 }
 
-.moderation-note .moderation-note-actions, .ui-dialog .ui-dialog-content .moderation-note-form .form-actions {
+.moderation-note a {
+  color: #85bef4;
+  border: 0;
+}
+
+.moderation-note a:hover {
+  color: #46a0f5;
+}
+
+.moderation-note-quote-information {
+  background: #245780;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #4787b9;
+}
+
+.moderation-note-quote-information blockquote {
+  background: none;
+  border: 0;
+  margin: 5px;
+  padding: 0;
+}
+
+.moderation-note-quote-information p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.ui-dialog .moderation-note-quote-information {
+  display: none;
+}
+
+.moderation-note .moderation-note-actions, .ui-dialog .ui-dialog-content .moderation-note-form .form-actions, .moderation-note-form .form-actions {
   background: #4787b9;
   padding-top: 0;
   text-align: right;
@@ -79,7 +113,7 @@
   margin-left: 15px;
 }
 
-.ui-dialog-offcanvas .moderation-note-actions a, .moderation-note-form input[type="submit"] {
+.moderation-note-actions a, .ui-dialog-offcanvas .moderation-note-actions a, .moderation-note-form input[type="submit"] {
   background: #4787b9;
   color: #85bef4;
   font-size: 13px;
@@ -92,8 +126,9 @@
   transition: .2s ease;
 }
 
-.ui-dialog-offcanvas .moderation-note-actions a:hover, .moderation-note-form input[type="submit"]:hover {
+.moderation-note-actions a:hover, .ui-dialog-offcanvas .moderation-note-actions a:hover, .moderation-note-form input[type="submit"]:hover {
   background: #376189;
+  border: 0;
   color: white;
 }
 
