@@ -28,6 +28,14 @@ interface ModerationNoteInterface extends ContentEntityInterface, EntityChangedI
   public function getParent();
 
   /**
+   * Gets a list of children for this note.
+   *
+   * @return \Drupal\moderation_notes\ModerationNoteInterface[]
+   *   An array of child moderation notes, sorted by creation date.
+   */
+  public function getChildren();
+
+  /**
    * Gets the Entity that this note is related to.
    *
    * @return \Drupal\Core\Entity\EntityInterface|null

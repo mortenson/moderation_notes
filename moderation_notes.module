@@ -3,7 +3,6 @@
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
 use Drupal\moderation_notes\ModerationNoteInterface;
-use Drupal\moderation_notes\Entity\ModerationNote;
 
 /**
  * Implements hook_entity_view_alter().
@@ -97,7 +96,6 @@ function moderation_notes_theme() {
   ];
 }
 
-
 /**
  * Prepares variables for moderation_note templates.
  *
@@ -159,6 +157,15 @@ function template_preprocess_moderation_note(&$variables) {
   }
 }
 
+/**
+ * Displays a timestamp in a human-readable fashion.
+ *
+ * @param int $time
+ *   A timestamp.
+ *
+ * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+ *   Markup representing a formatted time.
+ */
 function _moderation_notes_pretty_time($time) {
   $time = (int) $time;
   $too_old = strtotime('-1 month');
@@ -174,6 +181,15 @@ function _moderation_notes_pretty_time($time) {
   return $time_pretty;
 }
 
+/**
+ * Generates a field ID for a given note.
+ *
+ * @param \Drupal\moderation_notes\ModerationNoteInterface $note
+ *   The note to generate the field ID from.
+ *
+ * @return string
+ *   A string representing a note's field ID.
+ */
 function _moderation_notes_generate_field_id(ModerationNoteInterface $note) {
   return $note->getModeratedEntityTypeId() . '/' . $note->getModeratedEntityId() . '/' . $note->getEntityFieldName() . '/' . $note->getEntityLanguage() . '/' . $note->getEntityViewModeId();
 }

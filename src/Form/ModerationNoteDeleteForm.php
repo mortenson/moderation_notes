@@ -108,12 +108,8 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
     $note = $this->entity;
 
     // Delete all Moderation Notes that are replies of this note.
-    $storage = $this->entityTypeManager->getStorage('moderation_note');
-    $ids = \Drupal::entityQuery('moderation_note')
-      ->condition('parent', $note->id())
-      ->execute();
-    $entities = $storage->loadMultiple($ids);
-    $storage->delete($entities);
+    $replies = $note->getChildren();
+    $this->entityTypeManager->getStorage('moderation_note')->delete($replies);
 
     // Clear the Drupal messages, as this form uses AJAX to display its
     // results. Displaying a deletion message on the next page the user visits

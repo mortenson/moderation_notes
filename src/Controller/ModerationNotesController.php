@@ -99,11 +99,7 @@ class ModerationNotesController extends ControllerBase {
     $build[] = $view_builder->view($moderation_note);
 
     // Delete moderation notes that were replies to this note.
-    $ids = \Drupal::entityQuery('moderation_note')
-      ->condition('parent', $moderation_note->id())
-      ->execute();
-
-    $replies = $this->entityTypeManager()->getStorage('moderation_note')->loadMultiple($ids);
+    $replies = $moderation_note->getChildren();
     foreach ($replies as $reply) {
       $build[] = $view_builder->view($reply);
     }

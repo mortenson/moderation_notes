@@ -144,6 +144,17 @@ class ModerationNote extends ContentEntityBase implements ModerationNoteInterfac
   /**
    * {@inheritdoc}
    */
+  public function getChildren() {
+    $ids = \Drupal::entityQuery('moderation_note')
+      ->condition('parent', $this->id())
+      ->sort('created')
+      ->execute();
+    return $this->entityTypeManager()->getStorage('moderation_note')->loadMultiple($ids);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getOwner() {
     return $this->get('uid')->entity;
   }
