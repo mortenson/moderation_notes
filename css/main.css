@@ -45,6 +45,10 @@
   background: #b7d2ff;
 }
 
+.moderation-note-sidebar-wrapper {
+  padding-bottom: 150px;
+}
+
 .moderation-note, .moderation-note-form {
   background: #2d6c9e;
   padding: 10px;

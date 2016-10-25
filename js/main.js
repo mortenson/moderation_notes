@@ -45,7 +45,6 @@
     var id = response.id;
     var $wrapper = $('[data-moderation-note-highlight-id="' + id + '"]');
     $wrapper.contents().unwrap();
-    $('#drupal-offcanvas').dialog().dialog('close');
   };
 
   /**
@@ -63,7 +62,6 @@
   Drupal.AjaxCommands.prototype.add_moderation_note = function (ajax, response, status) {
     var note = response.note;
     showModerationNote(note);
-    $('#drupal-offcanvas').dialog().dialog('close');
   };
 
   /**
@@ -225,6 +223,9 @@
       });
       view_ajax.execute();
       e.preventDefault();
+
+      $tooltip.hide();
+      showContextHighlight($tooltip.data('moderation-note'));
     });
 
     $tooltip.on('mouseleave', function () {
@@ -281,6 +282,7 @@
     var id = $element.data('moderation-note-highlight-id');
     var url = Drupal.formatString(Drupal.url('moderation-note/!id'), {'!id': id});
     $tooltip.attr('href', url);
+    $tooltip.data('moderation-note', $element.data('moderation-note'));
 
     $tooltip.fadeIn('fast');
   }
@@ -303,6 +305,7 @@
 
         // This allows notes to be found by their ID.
         $wrap.attr('data-moderation-note-highlight-id', note.id);
+        $wrap.data('moderation-note', note);
 
         $wrap.on('mouseover', function () {
           showViewTooltip($view_tooltip, $(this));
@@ -432,6 +435,7 @@
    */
   Drupal.behaviors.moderation_notes = {
     attach: function (context, settings) {
+      // Auto-fill the new note form with the current selection.
       var $new_form = $('[data-moderation-notes-new-form]', context);
       if ($new_form.length) {
         var selection = Drupal.moderation_notes.selection;
@@ -440,15 +444,7 @@
         showContextHighlight(selection);
       }
 
-      // Allow forms to highlight contextual notes while open.
-      // We can't do this in a AJAX command as (afaik), you can't return an
-      // arbitrary AJAX command with a normal render array.
-      if (settings.highlight_moderation_note) {
-        showContextHighlight(settings.highlight_moderation_note);
-        delete settings.highlight_moderation_note;
-      }
-
-      // On page load, display all note given to us.
+      // On page load, display all notes given to us.
       if (settings.moderation_notes) {
         var notes = settings.moderation_notes;
         delete settings.moderation_notes;
@@ -456,7 +452,6 @@
           var note = notes[i];
           showModerationNote(note);
         }
-        $('#drupal-offcanvas').dialog().dialog('close');
       }
     }
   }

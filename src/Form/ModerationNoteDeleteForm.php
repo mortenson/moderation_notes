@@ -3,7 +3,9 @@
 namespace Drupal\moderation_notes\Form;
 
 use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\RemoveCommand;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\ContentEntityDeleteForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\moderation_notes\Ajax\RemoveModerationNoteCommand;
@@ -47,11 +49,10 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
     $form['#prefix'] = '<div class="moderation-note-form-wrapper" data-moderation-note-form-id="' . $note->id() . '">';
     $form['#suffix'] = '</div>';
 
-    $form['#attached']['drupalSettings']['highlight_moderation_note'] = [
-      'id' => $note->id(),
-      'quote' => $note->getQuote(),
-      'quote_offset' => $note->getQuoteOffset(),
-    ];
+    $form['#attributes']['class'][] = 'moderation-note-form';
+    if ($this->entity->hasParent()) {
+      $form['#attributes']['class'][] = 'moderation-note-form-reply';
+    }
 
     return $form;
   }
@@ -71,7 +72,31 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
           'disable-refocus' => TRUE,
         ],
       ],
+      'cancel' => [
+        '#type' => 'submit',
+        '#value' => $this->t('Cancel'),
+        '#executes_submit_callback' => FALSE,
+        '#ajax' => [
+          'callback' => '::cancelForm',
+          'method' => 'replace',
+          'disable-refocus' => TRUE,
+        ],
+      ],
     ];
+  }
+
+  public function cancelForm(array &$form, FormStateInterface $form_state) {
+    $response = new AjaxResponse();
+
+    /** @var \Drupal\moderation_notes\ModerationNoteInterface $note */
+    $note = $this->entity;
+    $selector = '[data-moderation-note-form-id="' . $note->id() . '"]';
+    $content = $this->entityTypeManager->getViewBuilder('moderation_note')->view($note);
+    $command = new ReplaceCommand($selector, $content);
+
+    $response->addCommand($command);
+
+    return $response;
   }
 
   /**
@@ -83,6 +108,14 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
     /** @var \Drupal\moderation_notes\Entity\ModerationNote $note */
     $note = $this->entity;
 
+    // Delete all Moderation Notes that are replies of this note.
+    $storage = $this->entityTypeManager->getStorage('moderation_note');
+    $ids = \Drupal::entityQuery('moderation_note')
+      ->condition('parent', $note->id())
+      ->execute();
+    $entities = $storage->loadMultiple($ids);
+    $storage->delete($entities);
+
     // Clear the Drupal messages, as this form uses AJAX to display its
     // results. Displaying a deletion message on the next page the user visits
     // is awkward.
@@ -90,6 +123,8 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
     $response = new AjaxResponse();
     if (!$note->getParent()) {
       $command = new RemoveModerationNoteCommand($note);
+      $response->addCommand($command);
+      $command = new CloseDialogCommand('#drupal-offcanvas');
     }
     else {
       $command = new RemoveCommand('[data-moderation-note-form-id="' . $note->id() . '"]');

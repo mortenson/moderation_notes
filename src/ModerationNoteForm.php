@@ -57,14 +57,6 @@ class ModerationNoteForm extends ContentEntityForm {
       '#default_value' => $note->getQuoteOffset(),
     ];
 
-    if ($this->getOperation() === 'edit') {
-      $form['#attached']['drupalSettings']['highlight_moderation_note'] = [
-        'id' => $note->id(),
-        'quote' => $note->getQuote(),
-        'quote_offset' => $note->getQuoteOffset(),
-      ];
-    }
-
     if ($this->getOperation() === 'reply' || $this->entity->hasParent()) {
       $form['#attributes']['class'][] = 'moderation-note-form-reply';
     }
@@ -76,7 +68,7 @@ class ModerationNoteForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   protected function actions(array $form, FormStateInterface $form_state) {
-    $actions['submit'] = array(
+    $actions['submit'] = [
       '#type' => 'submit',
       '#value' => $this->getOperation() === 'reply' ? $this->t('Reply') : $this->t('Save'),
       '#ajax' => [
@@ -84,10 +76,10 @@ class ModerationNoteForm extends ContentEntityForm {
         'method' => 'replace',
         'disable-refocus' => TRUE,
       ],
-    );
+    ];
 
     if ($this->getOperation() !== 'reply') {
-      $actions['cancel'] = array(
+      $actions['cancel'] = [
         '#type' => 'submit',
         '#value' => $this->t('Cancel'),
         '#executes_submit_callback' => FALSE,
@@ -96,7 +88,7 @@ class ModerationNoteForm extends ContentEntityForm {
           'method' => 'replace',
           'disable-refocus' => TRUE,
         ],
-      );
+      ];
     }
 
     return $actions;
@@ -135,6 +127,8 @@ class ModerationNoteForm extends ContentEntityForm {
 
     if ($this->getOperation() === 'create') {
       $command = new AddModerationNoteCommand($note);
+      $response->addCommand($command);
+      $command = new CloseDialogCommand('#drupal-offcanvas');
     }
     else {
       $form_id = $this->getOperation() === 'edit' ? $note->id() : $this->getOperation();

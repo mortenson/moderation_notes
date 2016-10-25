@@ -98,7 +98,7 @@ class ModerationNotesController extends ControllerBase {
     ];
     $build[] = $view_builder->view($moderation_note);
 
-    // Load replies for this entity.
+    // Delete moderation notes that were replies to this note.
     $ids = \Drupal::entityQuery('moderation_note')
       ->condition('parent', $moderation_note->id())
       ->execute();
