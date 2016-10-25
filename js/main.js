@@ -236,7 +236,7 @@
     });
 
     $tooltip.on('mousemove', function () {
-      $tooltip.stop().fadeIn();
+      $tooltip.finish().fadeIn();
       clearTimeout(view_tooltip_timeout);
     });
 
