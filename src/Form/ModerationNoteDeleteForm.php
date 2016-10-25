@@ -33,7 +33,7 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
    * {@inheritdoc}
    */
   public function getDescription() {
-    return $this->t('You are about to delete a note, this action cannot be undone.');
+    return $this->t('<p>You are about to delete a note, this action cannot be undone.</p>');
   }
 
   /**
@@ -67,7 +67,6 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
         '#value' => $this->getConfirmText(),
         '#ajax' => [
           'callback' => '::submitForm',
-          'wrapper' => 'moderation-note-form-wrapper',
           'method' => 'replace',
           'disable-refocus' => TRUE,
         ],
