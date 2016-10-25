@@ -7,17 +7,17 @@
 
   "use strict";
 
-  Drupal.moderation_notes = {
+  Drupal.moderation_notes = Drupal.moderation_notes || {
     selection: {
       quote: false,
       quote_offset: false,
       field_id: false
-    }
+    },
+    add_tooltip: initializeAddTooltip(),
+    view_tooltip: initializeViewTooltip()
   };
 
   // Local variables.
-  var $add_tooltip = initializeAddTooltip();
-  var $view_tooltip = initializeViewTooltip();
   var view_tooltip_timeout;
   var mousedown_pos = [];
   var mouseup_pos = [];
@@ -307,6 +307,8 @@
         $wrap.attr('data-moderation-note-highlight-id', note.id);
         $wrap.data('moderation-note', note);
 
+        var $view_tooltip = Drupal.moderation_notes.view_tooltip;
+
         $wrap.on('mouseover', function () {
           showViewTooltip($view_tooltip, $(this));
           $view_tooltip.stop().fadeIn();
@@ -398,6 +400,7 @@
   var timeout;
   $(document).on('selectionchange', function (e) {
     clearTimeout(timeout);
+    var $add_tooltip = Drupal.moderation_notes.add_tooltip;
     $add_tooltip.fadeOut('fast');
 
     timeout = setTimeout(function () {
