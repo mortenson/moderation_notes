@@ -4,6 +4,7 @@ namespace Drupal\moderation_notes;
 
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
+use Drupal\Core\Ajax\PrependCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
@@ -117,6 +118,21 @@ class ModerationNoteForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $form_id = $this->getOperation() === 'edit' ? $this->entity->id() : $this->getOperation();
+    $selector = '[data-moderation-note-form-id="' . $form_id . '"]';
+
+    // If the form has errors, return the contents of the form.
+    // @todo Why does $form_state->getErrors() and drupal_get_messages() return
+    // an empty string at this point in execution? This block of code will
+    // highlight form fields that have errors, but there will be no messages
+    // for the user.
+    if ($form_state->hasAnyErrors()) {
+      $response = new AjaxResponse();
+      $command = new ReplaceCommand($selector, $form);
+      $response->addCommand($command);
+      return $response;
+    }
+
     parent::submitForm($form, $form_state);
     parent::save($form, $form_state);
 
@@ -131,8 +147,6 @@ class ModerationNoteForm extends ContentEntityForm {
       $command = new CloseDialogCommand('#drupal-offcanvas');
     }
     else {
-      $form_id = $this->getOperation() === 'edit' ? $note->id() : $this->getOperation();
-      $selector = '[data-moderation-note-form-id="' . $form_id . '"]';
       $content = $this->entityTypeManager->getViewBuilder('moderation_note')->view($note);
       $command = new ReplaceCommand($selector, $content);
     }

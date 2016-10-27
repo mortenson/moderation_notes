@@ -103,6 +103,20 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $selector = '[data-moderation-note-form-id="' . $this->entity->id() . '"]';
+
+    // If the form has errors, return the contents of the form.
+    // @todo Why does $form_state->getErrors() and drupal_get_messages() return
+    // an empty string at this point in execution? This block of code will
+    // highlight form fields that have errors, but there will be no messages
+    // for the user.
+    if ($form_state->hasAnyErrors()) {
+      $response = new AjaxResponse();
+      $command = new ReplaceCommand($selector, $form);
+      $response->addCommand($command);
+      return $response;
+    }
+
     parent::submitForm($form, $form_state);
 
     /** @var \Drupal\moderation_notes\Entity\ModerationNote $note */
@@ -130,7 +144,7 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
       $command = new ReplaceCommand('.moderation-note-sidebar-wrapper', $this->t($message, $args));
     }
     else {
-      $command = new RemoveCommand('[data-moderation-note-form-id="' . $note->id() . '"]');
+      $command = new RemoveCommand($selector);
     }
     $response->addCommand($command);
     return $response;
