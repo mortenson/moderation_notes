@@ -51,6 +51,7 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
     $form['#suffix'] = '</div>';
 
     $form['#attributes']['class'][] = 'moderation-note-form';
+    $form['#attributes']['class'][] = 'moderation-note-form-delete';
     if ($this->entity->hasParent()) {
       $form['#attributes']['class'][] = 'moderation-note-form-reply';
     }

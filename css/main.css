@@ -57,6 +57,38 @@
   margin-top: 10px;
 }
 
+@keyframes moderation-note-form-delete {
+  from { background: #2d6c9e; }
+  to   { background: #b53535; }
+}
+
+@keyframes moderation-note-form-delete-actions {
+  from {
+    background: #4787b9;
+    color: #85bef4;
+  }
+  to   {
+    background: #b94747;
+    color: #EFC2C2;
+  }
+}
+
+.moderation-note-form-delete {
+  background: #b53535;
+  animation: moderation-note-form-delete 1s;
+}
+
+.ui-dialog .ui-dialog-content .moderation-note-form.moderation-note-form-delete .form-actions,
+.moderation-note-form.moderation-note-form-delete input[type="submit"] {
+  background: #b94747;
+  color: #EFC2C2;
+  animation: moderation-note-form-delete-actions 1s;
+}
+
+.moderation-note-form.moderation-note-form-delete input[type="submit"]:hover {
+  background: #893737;
+}
+
 .moderation-note .moderation-note-text {
   min-height: 100px;
 }
