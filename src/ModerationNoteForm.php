@@ -4,17 +4,11 @@ namespace Drupal\moderation_notes;
 
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
-use Drupal\Core\Ajax\PrependCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\ContentEntityForm;
-use Drupal\Core\Entity\EntityFormBuilderInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\moderation_notes\Ajax\AddModerationNoteCommand;
 use Drupal\moderation_notes\Ajax\ReplyModerationNoteCommand;
-use Drupal\moderation_notes\Ajax\ShowModerationNoteCommand;
-use Drupal\moderation_notes\Entity\ModerationNote;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form handler for the moderation_note edit forms.

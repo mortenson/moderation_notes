@@ -10,7 +10,6 @@ use Drupal\content_moderation\ModerationInformation;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\moderation_notes\Entity\ModerationNote;
 use Drupal\moderation_notes\ModerationNoteInterface;
-use Drupal\outside_in\Ajax\OpenOffCanvasDialogCommand;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
