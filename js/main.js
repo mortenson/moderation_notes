@@ -17,17 +17,8 @@
     view_tooltip: initializeViewTooltip()
   };
 
-  // Local variables.
+  // Local variable to track when the view tooltip fades.
   var view_tooltip_timeout;
-  var mousedown_pos = [];
-  var mouseup_pos = [];
-
-  // This whole nonsense about keeping track of the mouse position is only
-  // necessary to properly display a tooltip in the center of a Range.
-  // Range.getBoundingClientRect().left is fine within a container, but as soon
-  // as you start selecting complex elements it stops being accurate.
-  $(document).mousedown(function(e) { mousedown_pos = [e.pageX, e.pageY]; });
-  $(document).mousemove(function(e) { mouseup_pos = [e.pageX, e.pageY]; });
 
   /**
    * Command to remove a Moderation Note.
@@ -254,8 +245,9 @@
   function showAddTooltip ($tooltip, field_id) {
     var selection = window.getSelection();
     var range = selection.getRangeAt(0);
-    var top = range.getBoundingClientRect().top - ($tooltip.outerHeight() + 5);
-    var left = mousedown_pos[0] + ((mouseup_pos[0] - mousedown_pos[0]) / 2) - ($tooltip.outerWidth() / 2);
+    var rect = range.getBoundingClientRect();
+    var top = rect.top - ($tooltip.outerHeight() + 5);
+    var left = rect.left + (rect.width / 2) - ($tooltip.outerWidth() / 2);
     $tooltip.css('left', left + document.body.scrollLeft);
     $tooltip.css('top', top + document.body.scrollTop);
 
@@ -421,6 +413,7 @@
             var offset = getCursorPositionInTextOf($field[0], range);
             Drupal.moderation_notes.selection.quote = text;
             Drupal.moderation_notes.selection.quote_offset = offset;
+            Drupal.moderation_notes.selection.field_id = $field.data('moderation-notes-field-id');
           }
         }
       }
