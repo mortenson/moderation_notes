@@ -35,6 +35,19 @@ function moderation_notes_entity_view_alter(&$build, EntityInterface $entity, \D
 }
 
 /**
+ * Implements hook_entity_delete().
+ */
+function moderation_notes_entity_delete(EntityInterface $entity) {
+  // Load and delete all associated notes for this entity.
+  $ids = \Drupal::entityQuery('moderation_note')
+    ->condition('entity_type', $entity->getEntityTypeId())
+    ->condition('entity_id', $entity->id())
+    ->execute();
+  $notes = \Drupal::entityTypeManager()->getStorage('moderation_note')->loadMultiple($ids);
+  \Drupal::entityTypeManager()->getStorage('moderation_note')->delete($notes);
+}
+
+/**
  * Implements hook_preprocess_HOOK() for field templates.
  */
 function moderation_notes_preprocess_field(&$variables) {
