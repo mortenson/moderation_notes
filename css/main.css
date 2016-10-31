@@ -75,22 +75,18 @@
 
 .moderation-note-form-delete {
   background: #b53535;
-  animation: moderation-note-form-delete 1s;
+  animation: moderation-note-form-delete .5s;
 }
 
 .ui-dialog .ui-dialog-content .moderation-note-form.moderation-note-form-delete .form-actions,
 .moderation-note-form.moderation-note-form-delete input[type="submit"] {
   background: #b94747;
   color: #EFC2C2;
-  animation: moderation-note-form-delete-actions 1s;
+  animation: moderation-note-form-delete-actions .5s;
 }
 
 .moderation-note-form.moderation-note-form-delete input[type="submit"]:hover {
   background: #893737;
-}
-
-.moderation-note .moderation-note-text {
-  min-height: 100px;
 }
 
 .moderation-note .moderation-note-owner,
@@ -129,6 +125,10 @@
 
 .ui-dialog .moderation-note-quote-information {
   display: none;
+}
+
+.ui-dialog .moderation-note-preview .moderation-note-quote-information {
+  display: block;
 }
 
 .moderation-note .moderation-note-actions, .ui-dialog .ui-dialog-content .moderation-note-form .form-actions, .moderation-note-form .form-actions {

@@ -1,0 +1,16 @@
+<div {{ attributes.addClass('moderation-note-preview') }}>
+    <div class="moderation-note-quote-information">
+        <blockquote>{{ quote }}</blockquote>
+    </div>
+    <div class="moderation-note-text">
+        {{ text|nl2br }}
+    </div>
+    <div class="moderation-note-owner">
+        {{ author_link }} {{ created_pretty }}
+    </div>
+    <div class="moderation-note-actions">
+        {% if view_button %}
+            {{ view_button }}
+        {% endif %}
+    </div>
+</div>

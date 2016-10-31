@@ -6,7 +6,7 @@
         </div>
     {% endif %}
     <div class="moderation-note-text">
-        {{ text }}
+        {{ text|nl2br }}
     </div>
     <div class="moderation-note-owner">
         {{ author_link }} {{ created_pretty }}
@@ -17,9 +17,6 @@
         {% endif %}
         {% if delete_button %}
             {{ delete_button }}
-        {% endif %}
-        {% if view_button %}
-            {{ view_button }}
         {% endif %}
     </div>
 </div>
