@@ -42,3 +42,16 @@ moderation_notes.view:
     _title: 'View note'
   requirements:
     _entity_access: 'moderation_note.view'
+
+moderation_notes.list:
+  path: '/moderation-note/list/{entity_type}/{entity}'
+  defaults:
+    _controller: '\Drupal\moderation_notes\Controller\ModerationNotesController::listNotes'
+    _title: 'View notes'
+  requirements:
+    _permission: 'access moderation notes'
+    _entity_access: 'entity.view'
+  options:
+    parameters:
+      entity:
+        type: entity:{entity_type}

@@ -2,12 +2,14 @@
 
 namespace Drupal\moderation_notes\Controller;
 
+use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\AppendCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\content_moderation\ModerationInformation;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Query\QueryFactory;
+use Drupal\Core\Url;
 use Drupal\moderation_notes\Entity\ModerationNote;
 use Drupal\moderation_notes\ModerationNoteInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -21,18 +23,28 @@ class ModerationNotesController extends ControllerBase {
   /**
    * The ModerationInformation service.
    *
-   * @var \Drupal\content_moderation\ModerationInformation
+   * @var \Drupal\content_moderation\ModerationInformationInterface
    */
   protected $moderationInfo;
 
   /**
+   * The QueryFactory service.
+   *
+   * @var \Drupal\Core\Entity\Query\QueryFactory
+   */
+  protected $queryFactory;
+
+  /**
    * Constructs a ModerationNotesController.
    *
-   * @param \Drupal\content_moderation\ModerationInformation $moderation_information
+   * @param \Drupal\content_moderation\ModerationInformationInterface $moderation_information
    *   The ModerationInformation service.
+   * @param \Drupal\Core\Entity\Query\QueryFactory $query_factory
+   *   The QueryFactory service.
    */
-  public function __construct(ModerationInformation $moderation_information) {
+  public function __construct(ModerationInformationInterface $moderation_information, QueryFactory $query_factory) {
     $this->moderationInfo = $moderation_information;
+    $this->queryFactory = $query_factory;
   }
 
   /**
@@ -40,7 +52,8 @@ class ModerationNotesController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('content_moderation.moderation_information')
+      $container->get('content_moderation.moderation_information'),
+      $container->get('entity.query')
     );
   }
 
@@ -49,8 +62,6 @@ class ModerationNotesController extends ControllerBase {
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity this note is related to.
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   The current request object.
    * @param string $field_name
    *   The name of the field that is being notated.
    * @param string $langcode
@@ -61,7 +72,7 @@ class ModerationNotesController extends ControllerBase {
    * @return array
    *   A render array representing the form.
    */
-  public function createNote(EntityInterface $entity, $field_name, $langcode, $view_mode_id, Request $request) {
+  public function createNote(EntityInterface $entity, $field_name, $langcode, $view_mode_id) {
     $values = [
       'entity_type' => $entity->getEntityTypeId(),
       'entity_id' => $entity->id(),
@@ -81,24 +92,41 @@ class ModerationNotesController extends ControllerBase {
    *
    * @param \Drupal\moderation_notes\ModerationNoteInterface $moderation_note
    *   The moderation note you want to view.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request.
    *
    * @return array
    *   A render array representing the moderation note.
    */
-  public function viewNote(ModerationNoteInterface $moderation_note) {
+  public function viewNote(ModerationNoteInterface $moderation_note, Request $request) {
     $view_builder = $this->entityTypeManager()->getViewBuilder('moderation_note');
     $build = [
       '#type' => 'container',
       '#attributes' => ['class' => ['moderation-note-sidebar-wrapper']],
     ];
 
+    // If this request was made from a preview, provide a return link.
+    if ($request->get('from-preview', FALSE)) {
+      $params = [
+        'entity_type' => $moderation_note->getModeratedEntityTypeId(),
+        'entity' => $moderation_note->getModeratedEntityId(),
+      ];
+      $build[] = [
+        '#type' => 'link',
+        '#url' => Url::fromRoute('moderation_notes.list', $params),
+        '#title' => $this->t('← Back'),
+        '#attributes' => [
+          'class' => ['use-ajax'],
+          'data-dialog-type' => 'dialog',
+          'data-dialog-renderer' => 'offcanvas',
+        ],
+      ];
+    }
+
     $build[] = $view_builder->view($moderation_note);
 
-    // Delete moderation notes that were replies to this note.
     $replies = $moderation_note->getChildren();
-    foreach ($replies as $reply) {
-      $build[] = $view_builder->view($reply);
-    }
+    $build[] = $view_builder->viewMultiple($replies);
 
     if ($moderation_note->access('create')) {
       $new_note = ModerationNote::create([
@@ -116,6 +144,40 @@ class ModerationNotesController extends ControllerBase {
       'quote' => $moderation_note->getQuote(),
       'quote_offset' => $moderation_note->getQuoteOffset(),
     ];
+
+    return $build;
+  }
+
+  /**
+   * Lists all top-level notes for the given Entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity whose notes you want to view.
+   *
+   * @return array
+   *   A render array representing multiple moderation notes.
+   */
+  public function listNotes(EntityInterface $entity) {
+    $build = [];
+
+    $ids = $this->queryFactory->get('moderation_note')
+      ->condition('entity_type', $entity->getEntityTypeId())
+      ->condition('entity_id', $entity->id())
+      ->notExists('parent')
+      ->execute();
+
+    if (empty($ids)) {
+      $build[] = [
+        '#markup' => $this->t('<p>There are no notes for this entity. Go create some!</p>'),
+      ];
+    }
+    else {
+      $view_builder = $this->entityTypeManager()->getViewBuilder('moderation_note');
+      $notes = $this->entityTypeManager()->getStorage('moderation_note')->loadMultiple($ids);
+      $build[] = $view_builder->viewMultiple($notes, 'preview');
+    }
+
+    $build['#attached']['library'][] = 'moderation_notes/main';
 
     return $build;
   }

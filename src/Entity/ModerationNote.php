@@ -118,7 +118,7 @@ class ModerationNote extends ContentEntityBase implements ModerationNoteInterfac
 
     $fields['changed'] = BaseFieldDefinition::create('changed')
       ->setLabel(t('Changed'))
-      ->setDescription(t('The time that the node was last edited.'))
+      ->setDescription(t('The time that the note was last edited.'))
       ->setRequired(TRUE);
 
     return $fields;

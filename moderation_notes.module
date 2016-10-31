@@ -48,6 +48,90 @@ function moderation_notes_entity_delete(EntityInterface $entity) {
 }
 
 /**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function moderation_notes_menu_local_tasks_alter(&$data, $route_name) {
+  // If this is an admin route, return early.
+  // @todo Why doesn't Outside In behave nicely with Seven?
+  if (\Drupal::service('router.admin_context')->isAdminRoute()) {
+    return;
+  }
+
+  // Get the current Entity.
+  // @todo Support other entities. What's the generic way of doing this?
+  /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+  if (!$entity = \Drupal::routeMatch()->getParameter('node')) {
+    return;
+  }
+
+  // Check to see if there are associated notes for this Entity.
+  $count = \Drupal::entityQuery('moderation_note')
+    ->condition('entity_type', $entity->getEntityTypeId())
+    ->condition('entity_id', $entity->id())
+    ->notExists('parent')
+    ->count()
+    ->execute();
+
+  if ($count) {
+    $params = [
+      'entity_type' => $entity->getEntityTypeId(),
+      'entity' => $entity->id(),
+    ];
+    $data['tabs'][0]['moderation_notes.list'] = [
+      '#theme' => 'menu_local_task',
+      '#link' => [
+        'title' => t('View Notes'),
+        'url' => Url::fromRoute('moderation_notes.list', $params),
+        'localized_options' => [
+          'attributes' => [
+            'class' => ['use-ajax'],
+            'data-dialog-type' => 'dialog',
+            'data-dialog-renderer' => 'offcanvas',
+          ],
+        ],
+      ],
+      '#attached' => ['library' => ['moderation_notes/main'],
+      ],
+    ];
+  }
+
+}
+
+/**
+ * Implements hook_moderation_sidebar_alter().
+ */
+function moderation_notes_moderation_sidebar_alter(array &$build, EntityInterface $entity) {
+  // Check to see if there are associated notes for this Entity.
+  $count = \Drupal::entityQuery('moderation_note')
+    ->condition('entity_type', $entity->getEntityTypeId())
+    ->condition('entity_id', $entity->id())
+    ->notExists('parent')
+    ->count()
+    ->execute();
+
+  if ($count) {
+    $params = [
+      'entity_type' => $entity->getEntityTypeId(),
+      'entity' => $entity->id(),
+    ];
+    $build['moderation_notes'] = [
+      '#type' => 'link',
+      '#url' => Url::fromRoute('moderation_notes.list', $params),
+      '#title' => t('View Notes'),
+      '#attributes' => [
+        'class' => [
+          'use-ajax',
+          'moderation-sidebar-link',
+          'button'
+        ],
+        'data-dialog-type' => 'dialog',
+        'data-dialog-renderer' => 'offcanvas',
+      ],
+    ];
+  }
+}
+
+/**
  * Implements hook_preprocess_HOOK() for field templates.
  */
 function moderation_notes_preprocess_field(&$variables) {
@@ -137,15 +221,20 @@ function template_preprocess_moderation_note(&$variables) {
   $variables['moderated_entity_link'] = $note->getModeratedEntity()->toLink();
 
   // Attributes.
+  $in_preview = $variables['elements']['#view_mode'] === 'preview';
   $variables['attributes']['class'][] = 'moderation-note';
   $variables['attributes']['data-moderation-note-id'] = $note->id();
   if ($note->getParent()) {
     $variables['attributes']['class'][] = 'moderation-note-reply';
   }
+  if ($in_preview) {
+    $variables['attributes']['class'][] = 'moderation-note-preview';
+  }
+
+  $params = ['moderation_note' => $note->id()];
 
   // We show note actions inline with the note, if the user has access.
-  $params = ['moderation_note' => $note->id()];
-  if ($note->access('update')) {
+  if (!$in_preview && $note->access('update')) {
     $url = Url::fromRoute('moderation_notes.edit', $params);
     $variables['edit_button'] = [
       '#type' => 'link',
@@ -153,14 +242,34 @@ function template_preprocess_moderation_note(&$variables) {
       '#url' => $url,
       '#attributes' => [
         'class' => ['use-ajax'],
+        'data-dialog-type' => 'dialog',
+        'data-dialog-renderer' => 'offcanvas',
       ],
     ];
   }
-  if ($note->access('delete')) {
+
+  if (!$in_preview && $note->access('delete')) {
     $url = Url::fromRoute('moderation_notes.delete', $params);
     $variables['delete_button'] = [
       '#type' => 'link',
       '#title' => t('Delete'),
+      '#url' => $url,
+      '#attributes' => [
+        'class' => ['use-ajax'],
+        'data-dialog-type' => 'dialog',
+        'data-dialog-renderer' => 'offcanvas',
+      ],
+    ];
+  }
+
+  // We don't support view modes, but if a note is rendered with "preview" we
+  // add a button to view the "full" note (the note with replies).
+  if ($in_preview && $note->access('view')) {
+    $url = Url::fromRoute('moderation_notes.view', $params);
+    $url->setOption('query', ['from-preview' => '1']);
+    $variables['view_button'] = [
+      '#type' => 'link',
+      '#title' => t('View Full Note'),
       '#url' => $url,
       '#attributes' => [
         'class' => ['use-ajax'],
