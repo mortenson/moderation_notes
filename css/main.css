@@ -89,6 +89,10 @@
   background: #893737;
 }
 
+.moderation-note .moderation-note-text {
+  margin-bottom: 10px;
+}
+
 .moderation-note .moderation-note-owner,
 .moderation-note .moderation-note-owner a {
   font-size: 12px;
