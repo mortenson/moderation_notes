@@ -13,6 +13,7 @@
       quote_offset: false,
       field_id: false
     },
+    notes: [],
     add_tooltip: initializeAddTooltip(),
     view_tooltip: initializeViewTooltip()
   };
@@ -359,6 +360,15 @@
   }
 
   /**
+   * Removes all moderation notes from the page.
+   */
+  function removeModerationNotes () {
+    $('.moderation-note-highlight').each(function () {
+      $(this).contents().unwrap();
+    });
+  }
+
+  /**
    * Wraps a given range in a <span> tag with the provided classes.
    *
    * @param {Range} range
@@ -445,9 +455,34 @@
         var notes = settings.moderation_notes;
         delete settings.moderation_notes;
         for (var i in notes) {
-          var note = notes[i];
-          showModerationNote(note);
+          Drupal.moderation_notes.notes[i] = notes[i];
+          showModerationNote(notes[i]);
         }
+      }
+
+      if (Drupal.quickedit.collections.entities) {
+        $('body').once('moderation-notes-quickedit').each(function () {
+          // Toggle moderation note visibility based on Quick Edit's status.
+          Drupal.quickedit.collections.entities.on('change:isActive', function (model, is_active) {
+            if (is_active) {
+              removeModerationNotes();
+            }
+            else {
+              for (var i in Drupal.moderation_notes.notes) {
+                showModerationNote(Drupal.moderation_notes.notes[i]);
+              }
+            }
+          });
+          // After a Quick Edit entity is saved, show moderation notes.
+          Drupal.quickedit.collections.entities.on('change:isCommitting', function (model, is_committing) {
+            if (!is_committing) {
+              removeModerationNotes();
+              for (var i in Drupal.moderation_notes.notes) {
+                showModerationNote(Drupal.moderation_notes.notes[i]);
+              }
+            }
+          });
+        });
       }
     }
   }

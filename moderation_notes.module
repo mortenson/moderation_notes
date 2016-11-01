@@ -176,9 +176,11 @@ function _moderation_notes_access(EntityInterface $entity) {
   $moderation_information = \Drupal::service('content_moderation.moderation_information');
 
   // Check if this is the latest moderated revision and if the user has access.
+  // @todo When Quick Edit is rendering an entity after an edit, the revision
+  // ID is null. Investigate and/or file a core issue.
   return \Drupal::currentUser()->hasPermission('access moderation notes')
   && $moderation_information->isModeratedEntity($entity)
-  && $moderation_information->isLatestRevision($entity)
+  && ($entity->getRevisionId() === null || $moderation_information->isLatestRevision($entity))
   && !$entity->isNew();
 }
 

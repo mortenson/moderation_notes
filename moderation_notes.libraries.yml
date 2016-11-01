@@ -9,3 +9,4 @@ main:
     - outside_in/drupal.off_canvas
     # @todo Why does off canvas not work without outside in?
     - outside_in/drupal.outside_in
+    - core/jquery.once
