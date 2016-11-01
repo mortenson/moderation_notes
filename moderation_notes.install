@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * Implements hook_requirements().
+ */
+function moderation_notes_requirements($phase) {
+  $requirements = [];
+
+  $module_handler = \Drupal::moduleHandler();
+  if (!$module_handler->moduleExists('workbench_moderation') && !$module_handler->moduleExists('content_moderation')) {
+    $requirements['missing_moderation'] = [
+      'title' => t('A moderation module is not installed'),
+      'description' => t(
+        'Moderation Notes requires either Workbench or Content Moderation to be installed.'
+      ),
+      'severity' => REQUIREMENT_ERROR,
+    ];
+  }
+
+  return $requirements;
+}

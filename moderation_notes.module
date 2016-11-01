@@ -174,7 +174,7 @@ function moderation_notes_preprocess_field(&$variables) {
  */
 function _moderation_notes_access(EntityInterface $entity) {
   /** @var \Drupal\content_moderation\ModerationInformation $moderation_information */
-  $moderation_information = \Drupal::service('content_moderation.moderation_information');
+  $moderation_information = \Drupal::hasService('workbench_moderation.moderation_information') ? \Drupal::service('workbench_moderation.moderation_information') : \Drupal::service('content_moderation.moderation_information');
 
   // Check if this is the latest moderated revision and if the user has access.
   // @todo When Quick Edit is rendering an entity after an edit, the revision

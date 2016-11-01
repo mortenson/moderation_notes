@@ -2,7 +2,6 @@
 
 namespace Drupal\moderation_notes\Controller;
 
-use Drupal\content_moderation\ModerationInformationInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\AppendCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
@@ -42,7 +41,7 @@ class ModerationNotesController extends ControllerBase {
    * @param \Drupal\Core\Entity\Query\QueryFactory $query_factory
    *   The QueryFactory service.
    */
-  public function __construct(ModerationInformationInterface $moderation_information, QueryFactory $query_factory) {
+  public function __construct($moderation_information, QueryFactory $query_factory) {
     $this->moderationInfo = $moderation_information;
     $this->queryFactory = $query_factory;
   }
@@ -51,8 +50,9 @@ class ModerationNotesController extends ControllerBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
+    $moderation_info = $container->has('workbench_moderation.moderation_information') ? $container->get('workbench_moderation.moderation_information'): $container->get('content_moderation.moderation_information');
     return new static(
-      $container->get('content_moderation.moderation_information'),
+      $moderation_info,
       $container->get('entity.query')
     );
   }
