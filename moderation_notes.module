@@ -60,7 +60,8 @@ function moderation_notes_menu_local_tasks_alter(&$data, $route_name) {
   // Get the current Entity.
   // @todo Support other entities. What's the generic way of doing this?
   /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-  if (!$entity = \Drupal::routeMatch()->getParameter('node')) {
+  $entity = \Drupal::routeMatch()->getParameter('node');
+  if (!$entity || !is_object($entity)) {
     return;
   }
 
