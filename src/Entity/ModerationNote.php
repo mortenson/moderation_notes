@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\moderation_notes\Entity;
+namespace Drupal\moderation_note\Entity;
 
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -8,7 +8,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\moderation_notes\ModerationNoteInterface;
+use Drupal\moderation_note\ModerationNoteInterface;
 use Drupal\user\UserInterface;
 
 /**
@@ -18,13 +18,13 @@ use Drupal\user\UserInterface;
  *   id = "moderation_note",
  *   label = @Translation("Moderation note"),
  *   handlers = {
- *     "access" = "Drupal\moderation_notes\AccessControlHandler",
- *     "view_builder" = "Drupal\moderation_notes\ModerationNoteViewBuilder",
+ *     "access" = "Drupal\moderation_note\AccessControlHandler",
+ *     "view_builder" = "Drupal\moderation_note\ModerationNoteViewBuilder",
  *     "form" = {
- *       "create" = "Drupal\moderation_notes\ModerationNoteForm",
- *       "edit" = "Drupal\moderation_notes\ModerationNoteForm",
- *       "reply" = "Drupal\moderation_notes\ModerationNoteForm",
- *       "delete" = "Drupal\moderation_notes\Form\ModerationNoteDeleteForm"
+ *       "create" = "Drupal\moderation_note\ModerationNoteForm",
+ *       "edit" = "Drupal\moderation_note\ModerationNoteForm",
+ *       "reply" = "Drupal\moderation_note\ModerationNoteForm",
+ *       "delete" = "Drupal\moderation_note\Form\ModerationNoteDeleteForm"
  *     }
  *   },
  *   base_table = "moderation_note",

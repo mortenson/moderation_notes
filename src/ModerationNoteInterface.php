@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\moderation_notes;
+namespace Drupal\moderation_note;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
@@ -22,7 +22,7 @@ interface ModerationNoteInterface extends ContentEntityInterface, EntityChangedI
   /**
    * Gets the parent note, if there is one.
    *
-   * @return \Drupal\moderation_notes\ModerationNoteInterface|null
+   * @return \Drupal\moderation_note\ModerationNoteInterface|null
    *   The parent note, or NULL if this is not a reply.
    */
   public function getParent();
@@ -30,7 +30,7 @@ interface ModerationNoteInterface extends ContentEntityInterface, EntityChangedI
   /**
    * Gets a list of children for this note.
    *
-   * @return \Drupal\moderation_notes\ModerationNoteInterface[]
+   * @return \Drupal\moderation_note\ModerationNoteInterface[]
    *   An array of child moderation notes, sorted by creation date.
    */
   public function getChildren();

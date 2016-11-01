@@ -1,4 +1,4 @@
-name: Moderation Notes
+name: Moderation Note
 type: module
 description: Provides the ability to notate elements of a moderated Entity.
 core: 8.x

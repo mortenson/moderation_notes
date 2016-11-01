@@ -1,13 +1,13 @@
 /**
  * @file
- * Contains all Moderation Notes behaviors.
+ * Contains all Moderation Note behaviors.
  */
 
 (function ($, Drupal) {
 
   "use strict";
 
-  Drupal.moderation_notes = Drupal.moderation_notes || {
+  Drupal.moderation_note = Drupal.moderation_note || {
     selection: {
       quote: false,
       quote_offset: false,
@@ -83,7 +83,7 @@
    * Identical to Drupal.quickedit.utils.buildUrl.
    *
    * @param {Number} id
-   *   A field ID, as provied by moderation_notes_preprocess_field().
+   *   A field ID, as provied by moderation_note_preprocess_field().
    * @param {String} urlFormat
    *   A string with placeholders matching field ID parts.
    * @returns {String}
@@ -177,7 +177,7 @@
    *   The tooltip.
    */
   function initializeAddTooltip () {
-    var $tooltip = $('<a class="moderation-notes-tooltip" href="javascript;">' + Drupal.t('Add note') + '</a>').hide();
+    var $tooltip = $('<a class="moderation-note-tooltip" href="javascript;">' + Drupal.t('Add note') + '</a>').hide();
 
     // Click callback.
     $tooltip.on('click', function (e) {
@@ -202,7 +202,7 @@
    *   The tooltip.
    */
   function initializeViewTooltip () {
-    var $tooltip = $('<a class="moderation-notes-tooltip">' + Drupal.t('View note') + '</a>').hide();
+    var $tooltip = $('<a class="moderation-note-tooltip">' + Drupal.t('View note') + '</a>').hide();
 
     $('body').append($tooltip);
 
@@ -252,7 +252,7 @@
     $tooltip.css('left', left + document.body.scrollLeft);
     $tooltip.css('top', top + document.body.scrollTop);
 
-    var url = buildUrl(field_id, Drupal.url('moderation-notes/add/!entity_type/!id/!field_name/!langcode/!view_mode'));
+    var url = buildUrl(field_id, Drupal.url('moderation-note/add/!entity_type/!id/!field_name/!langcode/!view_mode'));
     $tooltip.attr('href', url);
 
     $tooltip.fadeIn('fast');
@@ -290,7 +290,7 @@
     // Remove all existing context highlights.
     removeContextHighlights();
 
-    var $field = $('[data-moderation-notes-field-id="' + note.field_id + '"]');
+    var $field = $('[data-moderation-note-field-id="' + note.field_id + '"]');
     if ($field.length) {
       var match = doSearch(note.quote, $field[0], note.quote_offset);
       if (match) {
@@ -300,7 +300,7 @@
         $wrap.attr('data-moderation-note-highlight-id', note.id);
         $wrap.data('moderation-note', note);
 
-        var $view_tooltip = Drupal.moderation_notes.view_tooltip;
+        var $view_tooltip = Drupal.moderation_note.view_tooltip;
 
         $wrap.on('mouseover', function () {
           showViewTooltip($view_tooltip, $(this));
@@ -337,7 +337,7 @@
     }
     // Otherwise, we need to create a new highlight.
     else {
-      var $field = $('[data-moderation-notes-field-id="' + note.field_id + '"]');
+      var $field = $('[data-moderation-note-field-id="' + note.field_id + '"]');
       var match = doSearch(note.quote, $field[0], note.quote_offset);
       if (match) {
         highliteRange(match, 'moderation-note-contextual-highlight new');
@@ -402,7 +402,7 @@
   var timeout;
   $(document).on('selectionchange', function (e) {
     clearTimeout(timeout);
-    var $add_tooltip = Drupal.moderation_notes.add_tooltip;
+    var $add_tooltip = Drupal.moderation_note.add_tooltip;
     $add_tooltip.fadeOut('fast');
 
     timeout = setTimeout(function () {
@@ -413,17 +413,17 @@
           // Ensure that this selection is contained inside a field wrapper.
           var range = selection.getRangeAt(0);
           var $ancestor = $(range.commonAncestorContainer);
-          var $field = $ancestor.closest('[data-moderation-notes-field-id]');
+          var $field = $ancestor.closest('[data-moderation-note-field-id]');
           if ($field.length) {
             // Show the tooltip.
-            showAddTooltip($add_tooltip, $field.data('moderation-notes-field-id'));
+            showAddTooltip($add_tooltip, $field.data('moderation-note-field-id'));
 
             // Store the current selection so that it can be added to the form
             // later.
             var offset = getCursorPositionInTextOf($field[0], range);
-            Drupal.moderation_notes.selection.quote = text;
-            Drupal.moderation_notes.selection.quote_offset = offset;
-            Drupal.moderation_notes.selection.field_id = $field.data('moderation-notes-field-id');
+            Drupal.moderation_note.selection.quote = text;
+            Drupal.moderation_note.selection.quote_offset = offset;
+            Drupal.moderation_note.selection.field_id = $field.data('moderation-note-field-id');
           }
         }
       }
@@ -435,16 +435,16 @@
   });
 
   /**
-   * Contains all Moderation Notes behaviors.
+   * Contains all Moderation Note behaviors.
    *
    * @type {Drupal~behavior}
    */
-  Drupal.behaviors.moderation_notes = {
+  Drupal.behaviors.moderation_note = {
     attach: function (context, settings) {
       // Auto-fill the new note form with the current selection.
-      var $new_form = $('[data-moderation-notes-new-form]', context);
+      var $new_form = $('[data-moderation-note-new-form]', context);
       if ($new_form.length) {
-        var selection = Drupal.moderation_notes.selection;
+        var selection = Drupal.moderation_note.selection;
         $new_form.find('.field-moderation-note-quote').val(selection.quote);
         $new_form.find('.field-moderation-note-quote-offset').val(selection.quote_offset);
         showContextHighlight(selection);
@@ -455,21 +455,21 @@
         var notes = settings.moderation_notes;
         delete settings.moderation_notes;
         for (var i in notes) {
-          Drupal.moderation_notes.notes[i] = notes[i];
+          Drupal.moderation_note.notes[i] = notes[i];
           showModerationNote(notes[i]);
         }
       }
 
       if (Drupal.quickedit.collections.entities) {
-        $('body').once('moderation-notes-quickedit').each(function () {
+        $('body').once('moderation-note-quickedit').each(function () {
           // Toggle moderation note visibility based on Quick Edit's status.
           Drupal.quickedit.collections.entities.on('change:isActive', function (model, is_active) {
             if (is_active) {
               removeModerationNotes();
             }
             else {
-              for (var i in Drupal.moderation_notes.notes) {
-                showModerationNote(Drupal.moderation_notes.notes[i]);
+              for (var i in Drupal.moderation_note.notes) {
+                showModerationNote(Drupal.moderation_note.notes[i]);
               }
             }
           });
@@ -477,8 +477,8 @@
           Drupal.quickedit.collections.entities.on('change:isCommitting', function (model, is_committing) {
             if (!is_committing) {
               removeModerationNotes();
-              for (var i in Drupal.moderation_notes.notes) {
-                showModerationNote(Drupal.moderation_notes.notes[i]);
+              for (var i in Drupal.moderation_note.notes) {
+                showModerationNote(Drupal.moderation_note.notes[i]);
               }
             }
           });

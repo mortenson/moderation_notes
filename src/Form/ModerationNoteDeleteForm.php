@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\moderation_notes\Form;
+namespace Drupal\moderation_note\Form;
 
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
@@ -8,7 +8,7 @@ use Drupal\Core\Ajax\RemoveCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\ContentEntityDeleteForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\moderation_notes\Ajax\RemoveModerationNoteCommand;
+use Drupal\moderation_note\Ajax\RemoveModerationNoteCommand;
 
 /**
  * Provides a form for deleting a moderation note.
@@ -42,7 +42,7 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
 
-    /** @var \Drupal\moderation_notes\Entity\ModerationNote $note */
+    /** @var \Drupal\moderation_note\Entity\ModerationNote $note */
     $note = $this->entity;
 
     // Wrap our form so that our submit callback can re-render the form.
@@ -88,7 +88,7 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
   public function cancelForm(array &$form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
 
-    /** @var \Drupal\moderation_notes\ModerationNoteInterface $note */
+    /** @var \Drupal\moderation_note\ModerationNoteInterface $note */
     $note = $this->entity;
     $selector = '[data-moderation-note-form-id="' . $note->id() . '"]';
     $content = $this->entityTypeManager->getViewBuilder('moderation_note')->view($note);
@@ -119,7 +119,7 @@ class ModerationNoteDeleteForm extends ContentEntityDeleteForm {
 
     parent::submitForm($form, $form_state);
 
-    /** @var \Drupal\moderation_notes\Entity\ModerationNote $note */
+    /** @var \Drupal\moderation_note\Entity\ModerationNote $note */
     $note = $this->entity;
 
     // Delete all Moderation Notes that are replies of this note.

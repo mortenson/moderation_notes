@@ -1,10 +1,10 @@
 main:
   version: VERSION
   js:
-    js/main.js: {}
+    js/moderation_note.js: {}
   css:
     component:
-      css/main.css: {}
+      css/moderation_note.css: {}
   dependencies:
     - outside_in/drupal.off_canvas
     # @todo Why does off canvas not work without outside in?

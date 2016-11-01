@@ -1,14 +1,14 @@
 <?php
 
-namespace Drupal\moderation_notes;
+namespace Drupal\moderation_note;
 
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\moderation_notes\Ajax\AddModerationNoteCommand;
-use Drupal\moderation_notes\Ajax\ReplyModerationNoteCommand;
+use Drupal\moderation_note\Ajax\AddModerationNoteCommand;
+use Drupal\moderation_note\Ajax\ReplyModerationNoteCommand;
 
 /**
  * Form handler for the moderation_note edit forms.
@@ -21,7 +21,7 @@ class ModerationNoteForm extends ContentEntityForm {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
 
-    /** @var \Drupal\moderation_notes\Entity\ModerationNote $note */
+    /** @var \Drupal\moderation_note\Entity\ModerationNote $note */
     $note = $this->entity;
 
     // Wrap our form so that our submit callback can re-render the form.
@@ -96,7 +96,7 @@ class ModerationNoteForm extends ContentEntityForm {
       $command = new CloseDialogCommand('#drupal-offcanvas');
     }
     else {
-      /** @var \Drupal\moderation_notes\ModerationNoteInterface $note */
+      /** @var \Drupal\moderation_note\ModerationNoteInterface $note */
       $note = $this->entity;
       $selector = '[data-moderation-note-form-id="' . $note->id() . '"]';
       $content = $this->entityTypeManager->getViewBuilder('moderation_note')->view($note);
@@ -130,7 +130,7 @@ class ModerationNoteForm extends ContentEntityForm {
     parent::submitForm($form, $form_state);
     parent::save($form, $form_state);
 
-    /** @var \Drupal\moderation_notes\ModerationNoteInterface $note */
+    /** @var \Drupal\moderation_note\ModerationNoteInterface $note */
     $note = $this->entity;
 
     $response = new AjaxResponse();

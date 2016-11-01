@@ -1,16 +1,16 @@
 <?php
 
-namespace Drupal\Tests\moderation_notes\FunctionalJavascript;
+namespace Drupal\Tests\moderation_note\FunctionalJavascript;
 
 /**
- * Contains Moderation Notes integration tests for Workbench Moderation.
+ * Contains Moderation Note integration tests for Workbench Moderation.
  *
  * This is done in a separate test class so that Workbench Moderation errors
  * can be easily identified during test runs.
  *
- * @group moderation_notes
+ * @group moderation_note
  */
-class WorkbenchModerationNotesTest extends ModerationNotesTest {
+class WorkbenchModerationNoteTest extends ModerationNoteTest {
 
   /**
    * {@inheritdoc}

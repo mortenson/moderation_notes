@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\moderation_notes;
+namespace Drupal\moderation_note;
 
 use Drupal\Core\Entity\EntityViewBuilder;
 

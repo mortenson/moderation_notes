@@ -1,9 +1,9 @@
-Moderation Notes
+Moderation Note
 ====================
 
 About this module
 -----------------
-Moderation Notes allows you to notate and review moderated Entities.
+The Moderation Note module allows you to notate and review moderated Entities.
 
 REQUIREMENTS
 ------------

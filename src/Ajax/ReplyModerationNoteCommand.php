@@ -1,9 +1,9 @@
 <?php
 
-namespace Drupal\moderation_notes\Ajax;
+namespace Drupal\moderation_note\Ajax;
 
 use Drupal\Core\Ajax\CommandInterface;
-use Drupal\moderation_notes\ModerationNoteInterface;
+use Drupal\moderation_note\ModerationNoteInterface;
 
 /**
  * AJAX command to reload the Moderation Note reply form.
@@ -13,14 +13,14 @@ class ReplyModerationNoteCommand implements CommandInterface {
   /**
    * The Moderation Note.
    *
-   * @var \Drupal\moderation_notes\ModerationNoteInterface
+   * @var \Drupal\moderation_note\ModerationNoteInterface
    */
   protected $moderation_note;
 
   /**
-   * Constructs a \Drupal\moderation_notes\Ajax\ReplyModerationNoteCommand object.
+   * Constructs a \Drupal\moderation_note\Ajax\ReplyModerationNoteCommand object.
    *
-   * @param \Drupal\moderation_notes\ModerationNoteInterface $moderation_note
+   * @param \Drupal\moderation_note\ModerationNoteInterface $moderation_note
    *   The parent Moderation Note.
    */
   public function __construct(ModerationNoteInterface $moderation_note) {

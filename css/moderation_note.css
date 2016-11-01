@@ -1,4 +1,4 @@
-.moderation-notes-tooltip {
+.moderation-note-tooltip {
   position: absolute;
   background: #277abd;
   border: 0;
@@ -10,15 +10,15 @@
   font-family: "Lucida Grande", 'Lucida Sans Unicode','liberation sans', sans-serif;
 }
 
-.moderation-notes-tooltip:hover,
-.moderation-notes-tooltip:focus {
+.moderation-note-tooltip:hover,
+.moderation-note-tooltip:focus {
   outline: none;
   border: 0;
   color: white;
   background: #46a0f5;
 }
 
-.moderation-notes-tooltip::after {
+.moderation-note-tooltip::after {
   content: " ";
   position: absolute;
   left: calc(50% - 10px);
@@ -31,8 +31,8 @@
   transition: border-top .5s ease;
 }
 
-.moderation-notes-tooltip:hover::after,
-.moderation-notes-tooltip:focus::after{
+.moderation-note-tooltip:hover::after,
+.moderation-note-tooltip:focus::after{
   border-top: 10px solid #46a0f5;
 }
 

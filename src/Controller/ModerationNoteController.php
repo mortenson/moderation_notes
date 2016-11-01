@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\moderation_notes\Controller;
+namespace Drupal\moderation_note\Controller;
 
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\AppendCommand;
@@ -9,15 +9,15 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Url;
-use Drupal\moderation_notes\Entity\ModerationNote;
-use Drupal\moderation_notes\ModerationNoteInterface;
+use Drupal\moderation_note\Entity\ModerationNote;
+use Drupal\moderation_note\ModerationNoteInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Endpoints for the Moderation Notes module.
+ * Endpoints for the Moderation Note module.
  */
-class ModerationNotesController extends ControllerBase {
+class ModerationNoteController extends ControllerBase {
 
   /**
    * The ModerationInformation service.
@@ -34,7 +34,7 @@ class ModerationNotesController extends ControllerBase {
   protected $queryFactory;
 
   /**
-   * Constructs a ModerationNotesController.
+   * Constructs a ModerationNoteController.
    *
    * @param \Drupal\content_moderation\ModerationInformationInterface $moderation_information
    *   The ModerationInformation service.
@@ -82,7 +82,7 @@ class ModerationNotesController extends ControllerBase {
     ];
     $moderation_note = ModerationNote::create($values);
     $form = $this->entityFormBuilder()->getForm($moderation_note, 'create');
-    $form['#attributes']['data-moderation-notes-new-form'] = TRUE;
+    $form['#attributes']['data-moderation-note-new-form'] = TRUE;
 
     return $form;
   }
@@ -90,7 +90,7 @@ class ModerationNotesController extends ControllerBase {
   /**
    * Views a moderation note, and all its replies.
    *
-   * @param \Drupal\moderation_notes\ModerationNoteInterface $moderation_note
+   * @param \Drupal\moderation_note\ModerationNoteInterface $moderation_note
    *   The moderation note you want to view.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request.
@@ -113,7 +113,7 @@ class ModerationNotesController extends ControllerBase {
       ];
       $build[] = [
         '#type' => 'link',
-        '#url' => Url::fromRoute('moderation_notes.list', $params),
+        '#url' => Url::fromRoute('moderation_note.list', $params),
         '#title' => $this->t('← Back'),
         '#attributes' => [
           'class' => ['use-ajax'],
@@ -137,7 +137,7 @@ class ModerationNotesController extends ControllerBase {
       $build[] = $this->entityFormBuilder()->getForm($new_note, 'reply');
     }
 
-    $build['#attached']['library'][] = 'moderation_notes/main';
+    $build['#attached']['library'][] = 'moderation_note/main';
 
     $build['#attached']['drupalSettings']['highlight_moderation_note'] = [
       'id' => $moderation_note->id(),
@@ -177,7 +177,7 @@ class ModerationNotesController extends ControllerBase {
       $build[] = $view_builder->viewMultiple($notes, 'preview');
     }
 
-    $build['#attached']['library'][] = 'moderation_notes/main';
+    $build['#attached']['library'][] = 'moderation_note/main';
 
     return $build;
   }
@@ -185,7 +185,7 @@ class ModerationNotesController extends ControllerBase {
   /**
    * Deletes a moderation note.
    *
-   * @param \Drupal\moderation_notes\ModerationNoteInterface $moderation_note
+   * @param \Drupal\moderation_note\ModerationNoteInterface $moderation_note
    *   The moderation note you want to delete.
    *
    * @return array
@@ -203,7 +203,7 @@ class ModerationNotesController extends ControllerBase {
   /**
    * Edits a moderation note.
    *
-   * @param \Drupal\moderation_notes\ModerationNoteInterface $moderation_note
+   * @param \Drupal\moderation_note\ModerationNoteInterface $moderation_note
    *   The moderation note you want to edit.
    *
    * @return array
@@ -221,7 +221,7 @@ class ModerationNotesController extends ControllerBase {
   /**
    * Replies to a moderation note.
    *
-   * @param \Drupal\moderation_notes\ModerationNoteInterface $moderation_note
+   * @param \Drupal\moderation_note\ModerationNoteInterface $moderation_note
    *   The moderation note you want to reply to.
    *
    * @return array

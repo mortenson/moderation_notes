@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\moderation_notes;
+namespace Drupal\moderation_note;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityAccessControlHandler;
@@ -8,9 +8,9 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 
 /**
- * Defines the access control handler for the moderation_notes entity type.
+ * Defines the access control handler for the moderation_note entity type.
  *
- * @see \Drupal\moderation_notes\Entity\ModerationNoteInterface
+ * @see \Drupal\moderation_note\Entity\ModerationNoteInterface
  */
 class AccessControlHandler extends EntityAccessControlHandler {
 

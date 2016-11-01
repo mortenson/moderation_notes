@@ -1,18 +1,18 @@
 <?php
 
-namespace Drupal\Tests\moderation_notes\FunctionalJavascript;
+namespace Drupal\Tests\moderation_note\FunctionalJavascript;
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\FunctionalJavascriptTests\JavascriptTestBase;
-use Drupal\moderation_notes\Entity\ModerationNote;
+use Drupal\moderation_note\Entity\ModerationNote;
 
 /**
- * Contains Moderation Notes integration tests.
+ * Contains Moderation Note integration tests.
  *
- * @group moderation_notes
+ * @group moderation_note
  */
-class ModerationNotesTest extends JavascriptTestBase {
+class ModerationNoteTest extends JavascriptTestBase {
 
   /**
    * {@inheritdoc}
@@ -34,7 +34,7 @@ class ModerationNotesTest extends JavascriptTestBase {
   protected function setUp() {
     parent::setUp();
 
-    $this->container->get('module_installer')->install([self::$moderation_module, 'moderation_notes'], TRUE);
+    $this->container->get('module_installer')->install([self::$moderation_module, 'moderation_note'], TRUE);
 
     // Create a Content Type with moderation enabled.
     $node_type = $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
@@ -71,7 +71,7 @@ class ModerationNotesTest extends JavascriptTestBase {
       ->load('node.article.default');
     $entity_display->setComponent('test_field')->save();
 
-    // Create a user who can use Moderation Notes.
+    // Create a user who can use Moderation Note.
     $user = $this->drupalCreateUser([
       'access moderation notes',
       'create moderation notes',

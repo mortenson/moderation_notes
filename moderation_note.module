@@ -2,13 +2,13 @@
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
-use Drupal\moderation_notes\ModerationNoteInterface;
+use Drupal\moderation_note\ModerationNoteInterface;
 
 /**
  * Implements hook_entity_view_alter().
  */
-function moderation_notes_entity_view_alter(&$build, EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
-  if (!_moderation_notes_access($entity)) {
+function moderation_note_entity_view_alter(&$build, EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
+  if (!_moderation_note_access($entity)) {
     return;
   }
 
@@ -21,11 +21,11 @@ function moderation_notes_entity_view_alter(&$build, EntityInterface $entity, \D
     ->notExists('parent')
     ->execute();
 
-  /** @var \Drupal\moderation_notes\ModerationNoteInterface[] $notes */
+  /** @var \Drupal\moderation_note\ModerationNoteInterface[] $notes */
   $notes = \Drupal::entityTypeManager()->getStorage('moderation_note')->loadMultiple($ids);
   foreach ($notes as $note) {
     $setting = [
-      'field_id' => _moderation_notes_generate_field_id($note),
+      'field_id' => _moderation_note_generate_field_id($note),
       'id' => $note->id(),
       'quote' => $note->getQuote(),
       'quote_offset' => $note->getQuoteOffset(),
@@ -37,7 +37,7 @@ function moderation_notes_entity_view_alter(&$build, EntityInterface $entity, \D
 /**
  * Implements hook_entity_delete().
  */
-function moderation_notes_entity_delete(EntityInterface $entity) {
+function moderation_note_entity_delete(EntityInterface $entity) {
   // Load and delete all associated notes for this entity.
   $ids = \Drupal::entityQuery('moderation_note')
     ->condition('entity_type', $entity->getEntityTypeId())
@@ -50,7 +50,7 @@ function moderation_notes_entity_delete(EntityInterface $entity) {
 /**
  * Implements hook_menu_local_tasks_alter().
  */
-function moderation_notes_menu_local_tasks_alter(&$data, $route_name) {
+function moderation_note_menu_local_tasks_alter(&$data, $route_name) {
   // If this is an admin route, return early.
   // @todo Why doesn't Outside In behave nicely with Seven?
   if (\Drupal::service('router.admin_context')->isAdminRoute()) {
@@ -78,11 +78,11 @@ function moderation_notes_menu_local_tasks_alter(&$data, $route_name) {
       'entity_type' => $entity->getEntityTypeId(),
       'entity' => $entity->id(),
     ];
-    $data['tabs'][0]['moderation_notes.list'] = [
+    $data['tabs'][0]['moderation_note.list'] = [
       '#theme' => 'menu_local_task',
       '#link' => [
         'title' => t('View Notes'),
-        'url' => Url::fromRoute('moderation_notes.list', $params),
+        'url' => Url::fromRoute('moderation_note.list', $params),
         'localized_options' => [
           'attributes' => [
             'class' => ['use-ajax'],
@@ -91,7 +91,7 @@ function moderation_notes_menu_local_tasks_alter(&$data, $route_name) {
           ],
         ],
       ],
-      '#attached' => ['library' => ['moderation_notes/main'],
+      '#attached' => ['library' => ['moderation_note/main'],
       ],
     ];
   }
@@ -101,7 +101,7 @@ function moderation_notes_menu_local_tasks_alter(&$data, $route_name) {
 /**
  * Implements hook_moderation_sidebar_alter().
  */
-function moderation_notes_moderation_sidebar_alter(array &$build, EntityInterface $entity) {
+function moderation_note_moderation_sidebar_alter(array &$build, EntityInterface $entity) {
   // Check to see if there are associated notes for this Entity.
   $count = \Drupal::entityQuery('moderation_note')
     ->condition('entity_type', $entity->getEntityTypeId())
@@ -117,7 +117,7 @@ function moderation_notes_moderation_sidebar_alter(array &$build, EntityInterfac
     ];
     $build['moderation_notes'] = [
       '#type' => 'link',
-      '#url' => Url::fromRoute('moderation_notes.list', $params),
+      '#url' => Url::fromRoute('moderation_note.list', $params),
       '#title' => t('View Notes'),
       '#attributes' => [
         'class' => [
@@ -135,7 +135,7 @@ function moderation_notes_moderation_sidebar_alter(array &$build, EntityInterfac
 /**
  * Implements hook_preprocess_HOOK() for field templates.
  */
-function moderation_notes_preprocess_field(&$variables) {
+function moderation_note_preprocess_field(&$variables) {
   $variables['#cache']['contexts'][] = 'user.permissions';
 
   $element = $variables['element'];
@@ -145,8 +145,7 @@ function moderation_notes_preprocess_field(&$variables) {
   $field_list = $element['#items'];
   $field_definition = $field_list->getFieldDefinition();
 
-  // Check access for moderation notes.
-  if (!_moderation_notes_access($entity)) {
+  if (!_moderation_note_access($entity)) {
     return;
   }
 
@@ -158,8 +157,8 @@ function moderation_notes_preprocess_field(&$variables) {
 
   $definition = $entity->getFieldDefinition($element['#field_name']);
   if (!$definition->isComputed()) {
-    $variables['#attached']['library'][] = 'moderation_notes/main';
-    $variables['attributes']['data-moderation-notes-field-id'] = $entity->getEntityTypeId() . '/' . $entity->id() . '/' . $element['#field_name'] . '/' . $element['#language'] . '/' . $element['#view_mode'];
+    $variables['#attached']['library'][] = 'moderation_note/main';
+    $variables['attributes']['data-moderation-note-field-id'] = $entity->getEntityTypeId() . '/' . $entity->id() . '/' . $element['#field_name'] . '/' . $element['#language'] . '/' . $element['#view_mode'];
   }
 }
 
@@ -172,7 +171,7 @@ function moderation_notes_preprocess_field(&$variables) {
  * @return bool
  *   TRUE if the current user can access the Entity, FALSE otherwise.
  */
-function _moderation_notes_access(EntityInterface $entity) {
+function _moderation_note_access(EntityInterface $entity) {
   /** @var \Drupal\content_moderation\ModerationInformation $moderation_information */
   $moderation_information = \Drupal::hasService('workbench_moderation.moderation_information') ? \Drupal::service('workbench_moderation.moderation_information') : \Drupal::service('content_moderation.moderation_information');
 
@@ -188,7 +187,7 @@ function _moderation_notes_access(EntityInterface $entity) {
 /**
  * Implements hook_theme().
  */
-function moderation_notes_theme() {
+function moderation_note_theme() {
   return [
     'moderation_note' => [
       'render element' => 'elements',
@@ -202,7 +201,7 @@ function moderation_notes_theme() {
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
-function moderation_notes_theme_suggestions_moderation_note(array $variables) {
+function moderation_note_theme_suggestions_moderation_note(array $variables) {
   return [
     'moderation_note__' . $variables['elements']['#view_mode'],
   ];
@@ -219,14 +218,14 @@ function moderation_notes_theme_suggestions_moderation_note(array $variables) {
  */
 function template_preprocess_moderation_note(&$variables) {
   $variables['moderation_note'] = $variables['elements']['#moderation_note'];
-  /** @var \Drupal\moderation_notes\ModerationNoteInterface $note */
+  /** @var \Drupal\moderation_note\ModerationNoteInterface $note */
   $note = $variables['moderation_note'];
   $variables['text'] = $note->getText();
   $variables['quote'] = $note->getQuote();
   $variables['created'] = $note->getCreatedTime();
-  $variables['created_pretty'] = _moderation_notes_pretty_time($note->getCreatedTime());
+  $variables['created_pretty'] = _moderation_note_pretty_time($note->getCreatedTime());
   $variables['updated'] = $note->getChangedTime();
-  $variables['updated_pretty'] = _moderation_notes_pretty_time($note->getChangedTime());
+  $variables['updated_pretty'] = _moderation_note_pretty_time($note->getChangedTime());
   $owner = $note->getOwner();
   $variables['author_name'] = $owner->getDisplayName();
   $variables['author_link'] = $owner->toLink()->toRenderable();
@@ -246,7 +245,7 @@ function template_preprocess_moderation_note(&$variables) {
 
   // We show note actions inline with the note, if the user has access.
   if ($note->access('update')) {
-    $url = Url::fromRoute('moderation_notes.edit', $params);
+    $url = Url::fromRoute('moderation_note.edit', $params);
     $variables['edit_button'] = [
       '#type' => 'link',
       '#title' => t('Edit'),
@@ -260,7 +259,7 @@ function template_preprocess_moderation_note(&$variables) {
   }
 
   if ($note->access('delete')) {
-    $url = Url::fromRoute('moderation_notes.delete', $params);
+    $url = Url::fromRoute('moderation_note.delete', $params);
     $variables['delete_button'] = [
       '#type' => 'link',
       '#title' => t('Delete'),
@@ -276,7 +275,7 @@ function template_preprocess_moderation_note(&$variables) {
   // We don't support view modes, but if a note is rendered with "preview" we
   // add a button to view the "full" note (the note with replies).
   if ($note->access('view')) {
-    $url = Url::fromRoute('moderation_notes.view', $params);
+    $url = Url::fromRoute('moderation_note.view', $params);
     $url->setOption('query', ['from-preview' => '1']);
     $variables['view_button'] = [
       '#type' => 'link',
@@ -300,7 +299,7 @@ function template_preprocess_moderation_note(&$variables) {
  * @return \Drupal\Core\StringTranslation\TranslatableMarkup
  *   Markup representing a formatted time.
  */
-function _moderation_notes_pretty_time($time) {
+function _moderation_note_pretty_time($time) {
   $time = (int) $time;
   $too_old = strtotime('-1 month');
   // Show formatted time differences for edits younger than a month.
@@ -318,12 +317,12 @@ function _moderation_notes_pretty_time($time) {
 /**
  * Generates a field ID for a given note.
  *
- * @param \Drupal\moderation_notes\ModerationNoteInterface $note
+ * @param \Drupal\moderation_note\ModerationNoteInterface $note
  *   The note to generate the field ID from.
  *
  * @return string
  *   A string representing a note's field ID.
  */
-function _moderation_notes_generate_field_id(ModerationNoteInterface $note) {
+function _moderation_note_generate_field_id(ModerationNoteInterface $note) {
   return $note->getModeratedEntityTypeId() . '/' . $note->getModeratedEntityId() . '/' . $note->getEntityFieldName() . '/' . $note->getEntityLanguage() . '/' . $note->getEntityViewModeId();
 }
